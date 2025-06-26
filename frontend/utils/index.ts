@@ -271,8 +271,21 @@ export const storage = {
  * API endpoint builder
  */
 export function buildApiUrl(endpoint: string, params?: Record<string, string>): string {
-  const baseUrl = process.env.BACKEND_URL || 'http://localhost:5000';
-  let url = `${baseUrl}${endpoint}`;
+  // In production, use the endpoint directly (will be handled by rewrites)
+  // In development, use the full backend URL
+  const isProduction = process.env.NODE_ENV === 'production';
+  const backendUrl = process.env.BACKEND_URL;
+  
+  let url: string;
+  
+  if (isProduction && (!backendUrl || backendUrl === '')) {
+    // Production without backend - use relative path
+    url = endpoint;
+  } else {
+    // Development or production with backend URL
+    const baseUrl = backendUrl || 'http://localhost:5000';
+    url = `${baseUrl}${endpoint}`;
+  }
   
   if (params) {
     const searchParams = new URLSearchParams(params);

@@ -10,12 +10,19 @@ const nextConfig = {
   
   // API configuration
   async rewrites() {
-    return [
-      {
-        source: '/api/:path*',
-        destination: `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/:path*`,
-      },
-    ];
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
+    
+    // Only set up rewrites if we have a valid backend URL
+    if (backendUrl && backendUrl !== '') {
+      return [
+        {
+          source: '/api/:path*',
+          destination: `${backendUrl}/api/:path*`,
+        },
+      ];
+    }
+    
+    return [];
   },
   
   // Image optimization

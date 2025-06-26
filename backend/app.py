@@ -2,6 +2,7 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
 import logging
+import os
 from datetime import datetime
 
 from app.database.neo4j_client import Neo4jClient
@@ -14,12 +15,28 @@ from app.api.alert_api import alert_api
 def create_app():
     app = Flask(__name__)
     
-    # Configure CORS
-    CORS(app, origins=[
+    # Configure CORS for development and production
+    allowed_origins = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
-        "https://sentinel-threat-intel.vercel.app"
-    ])
+    ]
+    
+    # Add production Vercel domains
+    vercel_domain = os.environ.get('VERCEL_DOMAIN')
+    if vercel_domain:
+        allowed_origins.append(f"https://{vercel_domain}")
+    
+    # Add any additional allowed origins from environment
+    additional_origins = os.environ.get('ALLOWED_ORIGINS', '').split(',')
+    for origin in additional_origins:
+        if origin.strip():
+            allowed_origins.append(origin.strip())
+    
+    # Allow all Vercel preview deployments in development
+    if os.environ.get('FLASK_ENV') == 'development':
+        allowed_origins.append("https://*.vercel.app")
+    
+    CORS(app, origins=allowed_origins)
     
     # Load environment variables
     load_dotenv()
