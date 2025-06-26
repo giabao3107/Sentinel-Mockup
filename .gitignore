@@ -1,0 +1,126 @@
+# Sentinel Production .gitignore
+
+# Environment and Configuration
+.env
+.env.local
+.env.production
+backend/.env
+frontend/.env.local
+
+# API Keys and Secrets
+**/api_keys.json
+**/secrets.json
+config/production.py
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv
+.ENV
+
+# PyTorch Models
+*.pth
+*.pt
+models/
+checkpoints/
+
+# Neo4j Data
+neo4j_data/
+graph_data/
+
+# Logs
+logs/
+*.log
+log/
+app.log
+error.log
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Next.js
+.next/
+out/
+build/
+
+# Production Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Cache
+.cache/
+*.cache
+redis_data/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Docker
+docker-compose.override.yml
+
+# Backup files
+*.bak
+*.backup
+backup/
+
+# Testing
+.coverage
+htmlcov/
+.tox/
+.pytest_cache/
+
+# Production artifacts
+ssl/
+certificates/
+nginx_logs/
+
+# User uploads
+uploads/
+media/
+
+# Temporary files
+tmp/
+temp/
+*.tmp 
