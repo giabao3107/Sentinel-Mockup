@@ -1,15 +1,22 @@
 {
   "name": "sentinel-frontend",
   "version": 2,
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "framework": "nextjs",
   "functions": {
     "pages/api/**/*.js": {
+      "maxDuration": 30
+    },
+    "pages/api/**/*.ts": {
       "maxDuration": 30
     }
   },
   "env": {
     "NEXT_PUBLIC_API_URL": "https://sentinel-backend.onrender.com",
     "NEXT_PUBLIC_APP_NAME": "Sentinel",
-    "NEXT_PUBLIC_APP_VERSION": "2.0"
+    "NEXT_PUBLIC_APP_VERSION": "2.0",
+    "NEXT_TELEMETRY_DISABLED": "1"
   },
   "build": {
     "env": {
@@ -71,6 +78,23 @@
           "value": "s-maxage=60, stale-while-revalidate"
         }
       ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        }
+      ]
     }
   ],
   "redirects": [
@@ -79,5 +103,8 @@
       "destination": "/index",
       "permanent": false
     }
-  ]
+  ],
+  "regions": ["iad1"],
+  "cleanUrls": true,
+  "trailingSlash": false
 } 
