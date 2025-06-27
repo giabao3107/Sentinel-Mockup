@@ -77,14 +77,18 @@ export default async function handler(
   }
 
   try {
+    console.log('Wallet API called with query:', req.query);
     const { address } = req.query;
     
     if (!address || typeof address !== 'string') {
+      console.log('Invalid address parameter:', address);
       return res.status(400).json({
         success: false,
         error: 'Valid address parameter is required'
       });
     }
+    
+    console.log('Processing address:', address);
 
     // Try to proxy to the backend first (with timeout)
     const backendUrl = process.env.BACKEND_URL || 'https://sentinel-mockup.onrender.com';
@@ -114,9 +118,12 @@ export default async function handler(
     }
 
     // Fallback to mock data
+    console.log('Using fallback mock data for address:', address);
     const walletData = mockWalletData[address as keyof typeof mockWalletData];
+    console.log('Found wallet data:', walletData ? 'Yes' : 'No');
     
     if (walletData) {
+      console.log('Transforming mock data to response structure');
       // Transform mock data to match WalletAnalysisResponse structure
       const response = {
         address: walletData.address,
@@ -141,21 +148,41 @@ export default async function handler(
           confidence: 'medium' as const
         },
         transactions: {
-          recent: walletData.recent_transactions.map(tx => ({
-            hash: tx.hash,
-            from: tx.from,
-            to: tx.to,
-            value_wei: parseFloat(tx.value) * 1000000000000000000, // 10^18
-            value_ether: parseFloat(tx.value),
-            timestamp: tx.timestamp,
-            block_number: 0,
-            gas_used: 21000,
-            gas_price: 20000000000,
-            transaction_fee: 0.00042,
-            is_error: false,
-            method_id: tx.method === 'transfer' ? '0xa9059cbb' : '0x'
-          })),
-          total_count: walletData.transaction_count,
+          recent: walletData.recent_transactions ? walletData.recent_transactions.map(tx => {
+            try {
+              return {
+                hash: tx.hash || '',
+                from: tx.from || '',
+                to: tx.to || '',
+                value_wei: Math.floor((parseFloat(tx.value || '0')) * 1000000000000000000), // 10^18
+                value_ether: parseFloat(tx.value || '0'),
+                timestamp: tx.timestamp || new Date().toISOString(),
+                block_number: 0,
+                gas_used: 21000,
+                gas_price: 20000000000,
+                transaction_fee: 0.00042,
+                is_error: false,
+                method_id: tx.method === 'transfer' ? '0xa9059cbb' : '0x'
+              };
+            } catch (txError) {
+              console.error('Error processing transaction:', txError);
+              return {
+                hash: '',
+                from: '',
+                to: '',
+                value_wei: 0,
+                value_ether: 0,
+                timestamp: new Date().toISOString(),
+                block_number: 0,
+                gas_used: 21000,
+                gas_price: 20000000000,
+                transaction_fee: 0.00042,
+                is_error: false,
+                method_id: '0x'
+              };
+            }
+          }) : [],
+          total_count: walletData.transaction_count || 0,
           volume_stats: {
             total_sent_wei: 0,
             total_received_wei: 0,
@@ -175,8 +202,10 @@ export default async function handler(
         }
       };
       
+      console.log('Returning transformed response for known address');
       return res.status(200).json(response);
     } else {
+      console.log('Generating basic mock data for unknown address');
       // Generate basic mock data for unknown addresses
       const response = {
         address: address,
@@ -222,10 +251,12 @@ export default async function handler(
         }
       };
       
+      console.log('Returning basic mock response for unknown address');
       return res.status(200).json(response);
     }
   } catch (error) {
     console.error('Wallet API error:', error);
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     
     // Return a basic fallback response even if everything fails
     try {
