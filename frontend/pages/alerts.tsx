@@ -53,6 +53,7 @@ export default function AlertSystem() {
   const [alertRules, setAlertRules] = useState<AlertRule[]>([]);
   const [alertEvents, setAlertEvents] = useState<AlertEvent[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [activeTab, setActiveTab] = useState<'rules' | 'events' | 'create'>('rules');
 
@@ -64,7 +65,15 @@ export default function AlertSystem() {
     severity: 'medium' as const,
     target_addresses: [''],
     notification_channels: ['email'],
-    conditions: {}
+    conditions: {},
+    // Rule-specific parameters
+    threshold: 80,
+    threshold_eth: 10,
+    condition: 'above',
+    time_window_minutes: 5,
+    min_transaction_count: 5,
+    max_age_hours: 24,
+    cooldown_minutes: 60
   });
 
   // Load data from API
@@ -201,18 +210,28 @@ export default function AlertSystem() {
 
   const handleCreateAlert = async () => {
     setLoading(true);
+    setError(null);
+    
     try {
-      // In real app, make API call to create alert
       const response = await fetch('/api/alerts/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newAlert)
+        body: JSON.stringify({
+          ...newAlert,
+          conditions: {}
+        })
       });
       
-      if (response.ok) {
-        // Refresh alert rules
-        loadMockData();
-        setShowCreateForm(false);
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        // Add new rule to the list
+        if (data.rule) {
+          setAlertRules(prev => [...prev, data.rule]);
+        }
+        
+        // Reset form
+        setActiveTab('rules');
         setNewAlert({
           name: '',
           description: '',
@@ -222,26 +241,62 @@ export default function AlertSystem() {
           notification_channels: ['email'],
           conditions: {}
         });
+        
+        // Show success message
+        setError(null);
+      } else {
+        setError(data.error || 'Failed to create alert rule');
       }
     } catch (error) {
       console.error('Failed to create alert:', error);
+      setError('Network error occurred while creating alert');
     } finally {
       setLoading(false);
     }
   };
 
-  const toggleAlertStatus = (alertId: string) => {
-    setAlertRules(rules => 
-      rules.map(rule => 
-        rule.id === alertId 
-          ? { ...rule, status: rule.status === 'active' ? 'paused' : 'active' }
-          : rule
-      )
-    );
+  const toggleAlertStatus = async (alertId: string) => {
+    try {
+      const response = await fetch(`/api/alerts/manage?action=toggle&rule_id=${alertId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        setAlertRules(rules => 
+          rules.map(rule => 
+            rule.id === alertId 
+              ? { ...rule, status: data.status }
+              : rule
+          )
+        );
+      } else {
+        console.error('Failed to toggle alert status:', data.error);
+      }
+    } catch (error) {
+      console.error('Failed to toggle alert status:', error);
+    }
   };
 
-  const deleteAlert = (alertId: string) => {
-    setAlertRules(rules => rules.filter(rule => rule.id !== alertId));
+  const deleteAlert = async (alertId: string) => {
+    try {
+      const response = await fetch(`/api/alerts/manage?rule_id=${alertId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        setAlertRules(rules => rules.filter(rule => rule.id !== alertId));
+      } else {
+        console.error('Failed to delete alert:', data.error);
+      }
+    } catch (error) {
+      console.error('Failed to delete alert:', error);
+    }
   };
 
   const getSeverityColor = (severity: string) => {
