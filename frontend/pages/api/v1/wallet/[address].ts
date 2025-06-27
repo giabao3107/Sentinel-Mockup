@@ -86,17 +86,31 @@ export default async function handler(
       });
     }
 
-    // Try to proxy to the backend first
+    // Try to proxy to the backend first (with timeout)
     const backendUrl = process.env.BACKEND_URL || 'https://sentinel-mockup.onrender.com';
     
     try {
-      const response = await fetch(`${backendUrl}/api/v1/wallet/${address}`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+      
+      const response = await fetch(`${backendUrl}/api/v1/wallet/${address}`, {
+        method: 'GET',
+        signal: controller.signal,
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      
+      clearTimeout(timeoutId);
+      
       if (response.ok) {
         const data = await response.json();
         return res.status(200).json(data);
+      } else {
+        console.log(`Backend returned ${response.status}, using mock data`);
       }
     } catch (error) {
-      console.log('Backend unavailable, using mock data');
+      console.log('Backend unavailable, using mock data:', error instanceof Error ? error.message : 'Unknown error');
     }
 
     // Fallback to mock data
@@ -110,7 +124,7 @@ export default async function handler(
         analysis_mode: 'basic' as const,
         wallet_info: {
           balance: {
-            wei: (parseFloat(walletData.balance) * Math.pow(10, 18)).toString(),
+            wei: (parseFloat(walletData.balance) * 1000000000000000000).toString(), // 10^18
             ether: parseFloat(walletData.balance),
             usd_value: walletData.balance_usd
           },
@@ -131,7 +145,7 @@ export default async function handler(
             hash: tx.hash,
             from: tx.from,
             to: tx.to,
-            value_wei: parseFloat(tx.value) * Math.pow(10, 18),
+            value_wei: parseFloat(tx.value) * 1000000000000000000, // 10^18
             value_ether: parseFloat(tx.value),
             timestamp: tx.timestamp,
             block_number: 0,
@@ -212,9 +226,52 @@ export default async function handler(
     }
   } catch (error) {
     console.error('Wallet API error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Internal server error'
-    });
+    
+    // Return a basic fallback response even if everything fails
+    try {
+      const basicResponse = {
+        address: req.query.address || 'unknown',
+        analysis_timestamp: new Date().toISOString(),
+        analysis_mode: 'basic' as const,
+        wallet_info: {
+          balance: { wei: '0', ether: 0, usd_value: 0 },
+          transaction_count: 0,
+          token_count: 0,
+          first_transaction: null,
+          last_transaction: null
+        },
+        risk_assessment: {
+          risk_score: 0,
+          risk_level: 'MINIMAL' as const,
+          risk_factors: ['Error occurred'],
+          behavioral_tags: [],
+          confidence: 'low' as const
+        },
+        transactions: {
+          recent: [],
+          total_count: 0,
+          volume_stats: {
+            total_sent_wei: 0, total_received_wei: 0,
+            total_sent_ether: 0, total_received_ether: 0,
+            net_balance_change_wei: 0, net_balance_change_ether: 0
+          }
+        },
+        tokens: [],
+        metadata: {
+          data_sources: ['Error Fallback'],
+          analysis_engine: 'Sentinel Error Handler',
+          chain: 'ethereum',
+          analysis_timestamp: new Date().toISOString()
+        }
+      };
+      
+      return res.status(200).json(basicResponse);
+    } catch (fallbackError) {
+      console.error('Even fallback failed:', fallbackError);
+      return res.status(500).json({
+        error: 'Internal server error',
+        message: 'Unable to process request'
+      });
+    }
   }
 } 
