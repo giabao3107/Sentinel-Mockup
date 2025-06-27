@@ -14,12 +14,12 @@ const nextConfig = {
     
     // Only set up rewrites if we have a valid backend URL
     if (backendUrl && backendUrl !== '') {
-      return [
-        {
-          source: '/api/:path*',
+    return [
+      {
+        source: '/api/:path*',
           destination: `${backendUrl}/api/:path*`,
-        },
-      ];
+      },
+    ];
     }
     
     return [];
