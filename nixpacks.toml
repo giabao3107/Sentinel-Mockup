@@ -1,7 +1,8 @@
 [build]
 cmds = [
-  "pip install --no-cache-dir --timeout=1000 --upgrade pip",
-  "pip install --no-cache-dir --timeout=1000 -r requirements-minimal.txt"
+  "pip install --no-cache-dir --timeout=300 --upgrade pip",
+  "pip install --no-cache-dir --timeout=300 -r requirements-minimal.txt",
+  "pip cache purge"
 ]
 
 [start]
@@ -11,6 +12,7 @@ cmd = "cd backend && python run.py"
 PYTHONUNBUFFERED = "1"
 PIP_NO_CACHE_DIR = "1"
 PIP_DISABLE_PIP_VERSION_CHECK = "1"
+PYTHONDONTWRITEBYTECODE = "1"
 
 [phases.setup]
-nixPkgs = ["python312", "gcc", "pkg-config"] 
+nixPkgs = ["python311"] 
