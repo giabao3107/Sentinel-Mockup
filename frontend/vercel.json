@@ -97,13 +97,6 @@
       ]
     }
   ],
-  "redirects": [
-    {
-      "source": "/",
-      "destination": "/index",
-      "permanent": false
-    }
-  ],
   "regions": ["iad1"],
   "cleanUrls": true,
   "trailingSlash": false
