@@ -32,12 +32,12 @@
     "react-hot-toast": "^2.4.1",
     "react-query": "^3.39.3",
     "@headlessui/react": "^1.7.17",
-    "@heroicons/react": "^2.0.18"
+    "@heroicons/react": "^2.0.18",
+    "@tailwindcss/forms": "^0.5.0"
   },
   "devDependencies": {
     "eslint": "^8.0.0",
-    "eslint-config-next": "^14.0.0",
-    "@tailwindcss/forms": "^0.5.0"
+    "eslint-config-next": "^14.0.0"
   },
   "engines": {
     "node": ">=18.0.0",
