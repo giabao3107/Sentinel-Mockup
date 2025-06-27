@@ -19,6 +19,7 @@ def create_app():
     allowed_origins = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
+        "https://sentinel-mockup.vercel.app",  # Production Vercel domain
     ]
     
     # Add production Vercel domains
@@ -32,11 +33,17 @@ def create_app():
         if origin.strip():
             allowed_origins.append(origin.strip())
     
-    # Allow all Vercel preview deployments in development
+    # Configure CORS with more permissive settings
+    # Use supports_credentials=False and origins="*" for development
     if os.environ.get('FLASK_ENV') == 'development':
-        allowed_origins.append("https://*.vercel.app")
-    
-    CORS(app, origins=allowed_origins)
+        CORS(app, origins="*")
+    else:
+        # Production: use specific origins
+        CORS(app, 
+             origins=allowed_origins,
+             allow_headers=['Content-Type', 'Authorization', 'X-Requested-With'],
+             methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+             supports_credentials=False)
     
     # Load environment variables
     load_dotenv()

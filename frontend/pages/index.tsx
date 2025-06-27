@@ -5,7 +5,7 @@ import WalletSearch from '@/components/WalletSearch';
 import WalletDashboard from '@/components/WalletDashboard';
 import Layout from '@/components/Layout';
 import { WalletAnalysisResponse } from '@/types';
-import { buildApiUrl } from '@/utils';
+import { buildApiUrl, fetchWithFallback } from '@/utils';
 
 export default function Home() {
   const [currentAddress, setCurrentAddress] = useState<string>('');
@@ -19,7 +19,7 @@ export default function Home() {
     setCurrentAddress(address);
     
     try {
-      const response = await fetch(buildApiUrl(`/api/v1/wallet/${address}`));
+      const response = await fetchWithFallback(buildApiUrl(`/api/v1/wallet/${address}`));
       
       if (!response.ok) {
         const errorData = await response.json();

@@ -271,20 +271,19 @@ export const storage = {
  * API endpoint builder
  */
 export function buildApiUrl(endpoint: string, params?: Record<string, string>): string {
-  // In production, use the endpoint directly (will be handled by rewrites)
-  // In development, use the full backend URL
+  // Always use relative paths in production to leverage Vercel rewrites
+  // In development, check if we should use the backend URL
   const isProduction = process.env.NODE_ENV === 'production';
-  const backendUrl = process.env.BACKEND_URL;
+  const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL;
   
   let url: string;
   
-  if (isProduction && (!backendUrl || backendUrl === '')) {
-    // Production without backend - use relative path
+  if (isProduction) {
+    // Production: use relative paths to leverage Vercel rewrites and fallback API routes
     url = endpoint;
   } else {
-    // Development or production with backend URL
-    const baseUrl = backendUrl || 'http://localhost:5000';
-    url = `${baseUrl}${endpoint}`;
+    // Development: try backend URL, fallback to relative path
+    url = backendUrl ? `${backendUrl}${endpoint}` : endpoint;
   }
   
   if (params) {
@@ -293,4 +292,34 @@ export function buildApiUrl(endpoint: string, params?: Record<string, string>): 
   }
   
   return url;
+}
+
+/**
+ * Fetch with fallback to local API routes
+ */
+export async function fetchWithFallback(url: string, options?: RequestInit): Promise<Response> {
+  try {
+    const response = await fetch(url, options);
+    
+    // If the request fails, try the local API route version
+    if (!response.ok && url.includes('/api/')) {
+      console.log(`Primary API failed (${response.status}), trying fallback...`);
+      
+      // Convert external API URLs to local API routes
+      const localUrl = url.replace(/^https?:\/\/[^\/]+/, '');
+      return await fetch(localUrl, options);
+    }
+    
+    return response;
+  } catch (error) {
+    console.log('API request failed, trying fallback...', error);
+    
+    // If the URL contains an external host, try the local version
+    if (url.includes('://')) {
+      const localUrl = url.replace(/^https?:\/\/[^\/]+/, '');
+      return await fetch(localUrl, options);
+    }
+    
+    throw error;
+  }
 } 

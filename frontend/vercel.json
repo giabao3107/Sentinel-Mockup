@@ -1,12 +1,27 @@
 {
-  "env": {
-    "NEXT_PUBLIC_BACKEND_URL": "https://sentinel-mockup.onrender.com",
-    "BACKEND_URL": "https://sentinel-mockup.onrender.com"
+  "functions": {
+    "pages/api/**/*.js": {
+      "maxDuration": 30
+    }
   },
-  "rewrites": [
+  "rewrites": [],
+  "headers": [
     {
-      "source": "/api/:path*",
-      "destination": "https://sentinel-mockup.onrender.com/api/:path*"
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, PUT, DELETE, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization"
+        }
+      ]
     }
   ]
 } 
