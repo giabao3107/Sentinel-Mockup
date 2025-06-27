@@ -41,10 +41,15 @@ export default async function handler(
 
   // Test backend connectivity
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+    
     const backendResponse = await fetch(`${backendUrl}/health`, {
       method: 'GET',
-      timeout: 5000, // 5 second timeout
+      signal: controller.signal,
     });
+    
+    clearTimeout(timeoutId);
 
     if (backendResponse.ok) {
       const backendHealth = await backendResponse.json();
