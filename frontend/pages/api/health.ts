@@ -20,7 +20,7 @@ export default async function handler(
 
   const backendUrl = process.env.BACKEND_URL || 'https://sentinel-mockup.onrender.com';
   const healthData = {
-    status: 'healthy',
+    status: 'healthy' as 'healthy' | 'degraded',
     timestamp: new Date().toISOString(),
     frontend: {
       status: 'online',
@@ -29,8 +29,8 @@ export default async function handler(
     },
     backend: {
       url: backendUrl,
-      status: 'unknown',
-      error: null
+      status: 'unknown' as 'unknown' | 'online' | 'offline' | 'error',
+      error: null as string | null
     },
     features: {
       fallback_api: true,
