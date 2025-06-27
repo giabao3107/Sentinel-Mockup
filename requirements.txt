@@ -1,5 +1,5 @@
-# Sentinel - Render Optimized Requirements
-# Balanced features for stable deployment
+# Sentinel - Complete Requirements for Render Deployment
+# All necessary dependencies for full functionality
 
 # === Core Backend ===
 Flask==2.3.3
@@ -13,7 +13,7 @@ python-dotenv>=1.0.0
 pandas>=2.0.0
 numpy>=1.24.0
 
-# === Lightweight ML ===
+# === Machine Learning ===
 scikit-learn>=1.3.0
 torch>=2.1.0
 
@@ -21,7 +21,7 @@ torch>=2.1.0
 neo4j>=5.13.0
 py2neo>=2021.2.3
 
-# === Alert System (Basic) ===
+# === Scheduling & Background Tasks ===
 APScheduler>=3.10.0
 
 # === Multi-Chain Support ===
@@ -31,15 +31,28 @@ base58>=2.1.0
 # === API & Security ===
 marshmallow>=3.20.0
 cryptography>=41.0.0
+pydantic>=2.0.0
+Werkzeug>=2.3.0
 
-# === HTTP Client ===
+# === HTTP & Async Clients ===
 httpx>=0.24.0
+aiohttp>=3.8.0
 
 # === GraphQL Client ===
 gql>=3.4.0
+
+# === Data Validation & Serialization ===
+jsonschema>=4.17.0
+
+# === Utilities ===
+python-dateutil>=2.8.0
+pytz>=2023.3
 
 # === Production Monitoring ===
 prometheus-client>=0.19.0
 
 # === Database ORM ===
-SQLAlchemy>=2.0.0 
+SQLAlchemy>=2.0.0
+
+# === Testing & Development (Optional) ===
+pytest>=7.4.0 
