@@ -103,31 +103,112 @@ export default async function handler(
     const walletData = mockWalletData[address as keyof typeof mockWalletData];
     
     if (walletData) {
-      return res.status(200).json({
-        success: true,
-        data: walletData,
-        analysis_mode: 'mock',
-        message: 'Using mock data - backend unavailable'
-      });
+      // Transform mock data to match WalletAnalysisResponse structure
+      const response = {
+        address: walletData.address,
+        analysis_timestamp: new Date().toISOString(),
+        analysis_mode: 'basic' as const,
+        wallet_info: {
+          balance: {
+            wei: (parseFloat(walletData.balance) * Math.pow(10, 18)).toString(),
+            ether: parseFloat(walletData.balance),
+            usd_value: walletData.balance_usd
+          },
+          transaction_count: walletData.transaction_count,
+          token_count: 0,
+          first_transaction: walletData.first_seen,
+          last_transaction: walletData.last_seen
+        },
+        risk_assessment: {
+          risk_score: walletData.risk_score,
+          risk_level: walletData.risk_level as any,
+          risk_factors: walletData.labels,
+          behavioral_tags: walletData.labels,
+          confidence: 'medium' as const
+        },
+        transactions: {
+          recent: walletData.recent_transactions.map(tx => ({
+            hash: tx.hash,
+            from: tx.from,
+            to: tx.to,
+            value_wei: parseFloat(tx.value) * Math.pow(10, 18),
+            value_ether: parseFloat(tx.value),
+            timestamp: tx.timestamp,
+            block_number: 0,
+            gas_used: 21000,
+            gas_price: 20000000000,
+            transaction_fee: 0.00042,
+            is_error: false,
+            method_id: tx.method === 'transfer' ? '0xa9059cbb' : '0x'
+          })),
+          total_count: walletData.transaction_count,
+          volume_stats: {
+            total_sent_wei: 0,
+            total_received_wei: 0,
+            total_sent_ether: 0,
+            total_received_ether: 0,
+            net_balance_change_wei: 0,
+            net_balance_change_ether: 0
+          }
+        },
+        tokens: [],
+        metadata: {
+          data_sources: ['Mock Data'],
+          analysis_engine: 'Sentinel Fallback',
+          chain: 'ethereum',
+          analysis_version: '2.0-mock',
+          analysis_timestamp: new Date().toISOString()
+        }
+      };
+      
+      return res.status(200).json(response);
     } else {
       // Generate basic mock data for unknown addresses
-      return res.status(200).json({
-        success: true,
-        data: {
-          address: address,
-          balance: '0.0',
-          balance_usd: 0,
-          first_seen: null,
-          last_seen: null,
+      const response = {
+        address: address,
+        analysis_timestamp: new Date().toISOString(),
+        analysis_mode: 'basic' as const,
+        wallet_info: {
+          balance: {
+            wei: '0',
+            ether: 0,
+            usd_value: 0
+          },
           transaction_count: 0,
-          risk_score: 0,
-          risk_level: 'MINIMAL',
-          labels: ['Unknown Address'],
-          recent_transactions: []
+          token_count: 0,
+          first_transaction: null,
+          last_transaction: null
         },
-        analysis_mode: 'mock',
-        message: 'Using mock data - backend unavailable'
-      });
+        risk_assessment: {
+          risk_score: 0,
+          risk_level: 'MINIMAL' as const,
+          risk_factors: ['Unknown Address'],
+          behavioral_tags: ['Unknown Address'],
+          confidence: 'low' as const
+        },
+        transactions: {
+          recent: [],
+          total_count: 0,
+          volume_stats: {
+            total_sent_wei: 0,
+            total_received_wei: 0,
+            total_sent_ether: 0,
+            total_received_ether: 0,
+            net_balance_change_wei: 0,
+            net_balance_change_ether: 0
+          }
+        },
+        tokens: [],
+        metadata: {
+          data_sources: ['Mock Data'],
+          analysis_engine: 'Sentinel Fallback',
+          chain: 'ethereum',
+          analysis_version: '2.0-mock',
+          analysis_timestamp: new Date().toISOString()
+        }
+      };
+      
+      return res.status(200).json(response);
     }
   } catch (error) {
     console.error('Wallet API error:', error);
