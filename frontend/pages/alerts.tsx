@@ -239,7 +239,15 @@ export default function AlertSystem() {
           severity: 'medium',
           target_addresses: [''],
           notification_channels: ['email'],
-          conditions: {}
+          conditions: {},
+          // Rule-specific parameters
+          threshold: 80,
+          threshold_eth: 10,
+          condition: 'above',
+          time_window_minutes: 5,
+          min_transaction_count: 5,
+          max_age_hours: 24,
+          cooldown_minutes: 60
         });
         
         // Show success message
