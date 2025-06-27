@@ -52,8 +52,8 @@ export default function GNNDashboard({ address: initialAddress }: GNNDashboardPr
       // Try multiple endpoints for better reliability
       const endpoints = [
         `/api/v3/intelligence/${targetAddress}?gnn_analysis=true&include_network=true&include_multichain=true`,
-        `/api/phase3/intelligence/${targetAddress}?gnn_analysis=true&include_network=true&include_multichain=true`,
-        `/api/v1/wallet/${targetAddress}/intelligence`
+        `/api/v3/gnn/${targetAddress}?include_network=true&include_multichain=true`,
+        `/api/v1/wallet/${targetAddress}`
       ];
       
       let response;
