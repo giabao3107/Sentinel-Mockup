@@ -271,19 +271,18 @@ export const storage = {
  * API endpoint builder
  */
 export function buildApiUrl(endpoint: string, params?: Record<string, string>): string {
-  // Always use relative paths in production to leverage Vercel rewrites
-  // In development, check if we should use the backend URL
+  // Check for backend URL configuration
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL;
   const isProduction = process.env.NODE_ENV === 'production';
-  const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL;
   
   let url: string;
   
-  if (isProduction) {
-    // Production: use relative paths to leverage Vercel rewrites and fallback API routes
-    url = endpoint;
+  // In development, always try to use direct backend URL first
+  if (!isProduction && backendUrl) {
+    url = `${backendUrl}${endpoint}`;
   } else {
-    // Development: try backend URL, fallback to relative path
-    url = backendUrl ? `${backendUrl}${endpoint}` : endpoint;
+    // In production or when no backend URL, use relative paths for Vercel rewrites
+    url = endpoint;
   }
   
   if (params) {
@@ -298,26 +297,59 @@ export function buildApiUrl(endpoint: string, params?: Record<string, string>): 
  * Fetch with fallback to local API routes
  */
 export async function fetchWithFallback(url: string, options?: RequestInit): Promise<Response> {
+  const timeoutMs = 10000; // 10 second timeout
+  
   try {
-    const response = await fetch(url, options);
+    // Add timeout to prevent hanging requests
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
     
-    // If the request fails, try the local API route version
+    const fetchOptions = {
+      ...options,
+      signal: controller.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        ...options?.headers,
+      },
+    };
+    
+    const response = await fetch(url, fetchOptions);
+    clearTimeout(timeoutId);
+    
+    // If backend responds but with error, still try fallback
     if (!response.ok && url.includes('/api/')) {
-      console.log(`Primary API failed (${response.status}), trying fallback...`);
+      console.log(`Backend API failed (${response.status}), trying fallback...`);
       
-      // Convert external API URLs to local API routes
+      // Convert to local API route (fallback to mock data)
       const localUrl = url.replace(/^https?:\/\/[^\/]+/, '');
-      return await fetch(localUrl, options);
+      
+      try {
+        return await fetch(localUrl, { ...fetchOptions, signal: undefined });
+      } catch (fallbackError) {
+        console.log('Fallback also failed, returning original response');
+        return response;
+      }
     }
     
     return response;
   } catch (error) {
-    console.log('API request failed, trying fallback...', error);
+    console.log('Backend API unavailable, trying fallback...', error instanceof Error ? error.message : 'Unknown error');
     
     // If the URL contains an external host, try the local version
     if (url.includes('://')) {
       const localUrl = url.replace(/^https?:\/\/[^\/]+/, '');
-      return await fetch(localUrl, options);
+      try {
+        return await fetch(localUrl, { 
+          ...options,
+          headers: {
+            'Content-Type': 'application/json',
+            ...options?.headers,
+          },
+        });
+      } catch (fallbackError) {
+        console.error('Both backend and fallback failed:', fallbackError);
+        throw error; // Throw original error
+      }
     }
     
     throw error;

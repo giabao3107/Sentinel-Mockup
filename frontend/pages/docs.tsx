@@ -125,7 +125,7 @@ export default function Documentation() {
                       <br/>
                       # Configure your settings<br/>
                       ETHERSCAN_API_KEY=your_api_key_here<br/>
-                      NEO4J_URI=bolt://localhost:7687
+                      DATABASE_URL=postgresql://sentinel:password@localhost:5432/sentinel
                     </code>
                   </div>
                 </div>
@@ -141,8 +141,8 @@ export default function Documentation() {
                       <Copy className="h-4 w-4" />
                     </button>
                     <code className="text-green-400 text-sm">
-                      # Start Neo4j database<br/>
-                      docker-compose up neo4j -d<br/>
+                      # Start PostgreSQL database<br/>
+                      docker-compose up postgres -d<br/>
                       <br/>
                       # Start backend API<br/>
                       cd backend && python run.py<br/>
@@ -189,7 +189,7 @@ export default function Documentation() {
                     </div>
                     <span className="flex items-center font-medium text-green-700">
                       <CheckCircle className="h-3 w-3 mr-1" />
-                      Neo4j
+                      PostgreSQL
                     </span>
                   </div>
                   <div className="flex items-center justify-between p-2 bg-white/50 rounded-lg">
@@ -364,7 +364,7 @@ export default function Documentation() {
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900 ml-3">Graph Analysis</h3>
                 </div>
-                <p className="text-gray-600 mb-4">Visualize wallet connections using Neo4j and D3.js</p>
+                <p className="text-gray-600 mb-4">Visualize wallet connections using PostgreSQL and Vis.js</p>
                 <div className="space-y-2 text-sm text-gray-500">
                   <div className="flex items-center">
                     <Eye className="h-3 w-3 text-blue-500 mr-2" />

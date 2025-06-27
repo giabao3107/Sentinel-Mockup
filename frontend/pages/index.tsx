@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import Head from 'next/head';
+import Link from 'next/link';
 import { Search, Activity, TrendingUp, Network, Zap, Globe, Brain, AlertTriangle, ChevronRight, Star, GitBranch, Shield } from 'lucide-react';
 import WalletSearch from '@/components/WalletSearch';
 import WalletDashboard from '@/components/WalletDashboard';
+import BackendStatus from '@/components/BackendStatus';
 import Layout from '@/components/Layout';
 import { WalletAnalysisResponse } from '@/types';
 import { buildApiUrl, fetchWithFallback } from '@/utils';
@@ -97,21 +99,27 @@ export default function Home() {
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">Graph Analysis</h3>
                   <p className="text-gray-600 text-sm">
-                    Interactive network visualization with D3.js and Neo4j graph database
+                    Interactive network visualization with Vis.js and PostgreSQL graph database
                   </p>
                 </div>
                 
-                <div className="group bg-white/70 backdrop-blur-sm rounded-2xl border border-white/20 p-6 hover:bg-white/90 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+                <Link href="/gnn" className="group bg-white/70 backdrop-blur-sm rounded-2xl border border-white/20 p-6 hover:bg-white/90 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 block">
                   <div className="mb-4">
-                    <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center group-hover:bg-purple-200 transition-colors">
+                    <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center group-hover:bg-purple-200 transition-colors relative">
                       <Brain className="h-6 w-6 text-purple-600" />
+                      <span className="absolute -top-1 -right-1 px-1.5 py-0.5 bg-purple-500 text-white text-xs font-bold rounded-full">
+                        NEW
+                      </span>
                     </div>
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">AI Intelligence</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">PyTorch GNN</h3>
                   <p className="text-gray-600 text-sm">
-                    Machine learning models for pattern recognition and threat detection
+                    Graph Neural Networks with PyTorch for advanced wallet classification and risk prediction
                   </p>
-                </div>
+                  <div className="mt-3 text-purple-600 text-sm font-medium group-hover:text-purple-700">
+                    Try AI Analysis →
+                  </div>
+                </Link>
                 
                 <div className="group bg-white/70 backdrop-blur-sm rounded-2xl border border-white/20 p-6 hover:bg-white/90 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
                   <div className="mb-4">
@@ -143,6 +151,9 @@ export default function Home() {
 
         {/* Enhanced Search Section */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+          {/* Backend Status */}
+          <BackendStatus />
+          
           <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/20 p-8 lg:p-12">
             <div className="text-center mb-10">
               <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
@@ -256,7 +267,7 @@ export default function Home() {
                   </li>
                   <li className="flex items-center">
                     <Brain className="h-4 w-4 mr-2 text-blue-500" />
-                    Neo4j Graph Database
+                    PostgreSQL Graph Database
                   </li>
                   <li className="flex items-center">
                     <Globe className="h-4 w-4 mr-2 text-blue-500" />

@@ -10,10 +10,10 @@ import logging
 from datetime import datetime, timedelta
 import numpy as np
 
-from ..database.neo4j_client import Neo4jClient
+from ..database.postgres_graph import PostgreSQLGraphClient
 from ..services.gnn_model import gnn_engine, GNNIntelligenceEngine
 from ..services.network_behavior_analyzer import NetworkBehaviorAnalyzer
-from ..services.alert_system import AlertSystem, AlertRule, AlertType
+from ..services.alert_system import AlertSystem, AlertRule, AlertSeverity
 from ..services.multichain_service import multichain_service, ChainType
 from ..services.etherscan_service import EtherscanService
 from ..services.risk_scorer import RiskScorer
@@ -24,14 +24,14 @@ phase3_bp = Blueprint('phase3', __name__, url_prefix='/api/v3')
 logger = logging.getLogger(__name__)
 
 # Service instances (initialized in app factory)
-neo4j_client: Neo4jClient = None
+graph_client: PostgreSQLGraphClient = None
 network_analyzer: NetworkBehaviorAnalyzer = None
 alert_system: AlertSystem = None
 
-def init_phase3_services(neo4j: Neo4jClient, analyzer: NetworkBehaviorAnalyzer, alerts: AlertSystem):
+def init_phase3_services(graph_db: PostgreSQLGraphClient, analyzer: NetworkBehaviorAnalyzer, alerts: AlertSystem):
     """Initialize Phase 3 service instances"""
-    global neo4j_client, network_analyzer, alert_system
-    neo4j_client = neo4j
+    global graph_client, network_analyzer, alert_system
+    graph_client = graph_db
     network_analyzer = analyzer
     alert_system = alerts
 
@@ -127,7 +127,7 @@ def get_comprehensive_intelligence(address: str):
         if include_network and network_analyzer:
             try:
                 # Get network data from Neo4j
-                network_data = neo4j_client.get_address_subgraph(address, depth=3)
+                network_data = graph_client.get_address_subgraph(address, depth=3)
                 
                 if network_data and network_data.get('nodes'):
                     # Analyze clusters
@@ -212,7 +212,7 @@ def create_alert_rule():
         # Create alert rule
         alert_rule = AlertRule(
             name=data['name'],
-            alert_type=AlertType(data['alert_type']),
+            severity=AlertSeverity(data.get('severity', 'medium')),
             conditions=data['conditions'],
             notification_channels=data.get('notification_channels', ['email']),
             cooldown_minutes=data.get('cooldown_minutes', 60),
@@ -286,16 +286,39 @@ def classify_address_with_gnn(address: str):
         return jsonify({"error": "Invalid Ethereum address"}), 400
     
     try:
+        # Get graph data and transaction data for GNN analysis
+        graph_data = {}
+        transaction_data = []
+        
+        if graph_client:
+            try:
+                graph_data = graph_client.get_address_analytics(address) or {}
+            except Exception as e:
+                logger.warning(f"Could not fetch graph data: {str(e)}")
+        
+        # Get transaction data from etherscan for feature engineering
+        try:
+            etherscan_service = EtherscanService()
+            tx_result = etherscan_service.get_transactions(address, limit=100)
+            transaction_data = tx_result.get('transactions', [])
+        except Exception as e:
+            logger.warning(f"Could not fetch transaction data: {str(e)}")
+        
         # Get GNN analysis
-        gnn_result = gnn_engine.analyze_address_with_gnn(address)
+        gnn_result = gnn_engine.predict_single_wallet(address, graph_data, transaction_data)
         
         return jsonify({
             "status": "success",
             "data": {
                 "address": address,
                 "gnn_analysis": gnn_result,
-                "model_version": gnn_engine.model_version,
-                "analysis_timestamp": datetime.now().isoformat()
+                "model_version": gnn_result.get('model_version', 'GNN_v1.0'),
+                "analysis_timestamp": datetime.now().isoformat(),
+                "features_used": {
+                    "graph_data_available": bool(graph_data),
+                    "transaction_count": len(transaction_data),
+                    "feature_engineering": "32-dimensional feature vector"
+                }
             }
         })
         

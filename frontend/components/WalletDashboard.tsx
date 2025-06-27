@@ -6,11 +6,12 @@ import LoadingSpinner from './LoadingSpinner';
 import RiskBadge from './RiskBadge';
 import TransactionList from './TransactionList';
 import AddressDisplay from './AddressDisplay';
-import InvestigationCanvas from './InvestigationCanvas';
+import VisJsGraph from './VisJsGraph';
+import GNNAnalysis from './GNNAnalysis';
 
 interface GraphData {
   nodes: any[];
-  relationships: any[];
+  edges: any[];
   center_address?: string;
   depth?: number;
 }
@@ -158,15 +159,7 @@ export default function WalletDashboard({ address, data, loading, error }: Walle
               size="lg" 
             />
             
-            {!isEnhanced && (
-              <button
-                onClick={handleImportData}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm transition-colors"
-              >
-                <TrendingUp className="h-4 w-4" />
-                Upgrade to Enhanced Analysis
-              </button>
-            )}
+
           </div>
         </div>
 
@@ -314,33 +307,82 @@ export default function WalletDashboard({ address, data, loading, error }: Walle
             )}
           </div>
 
-          {/* Risk Assessment Card */}
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-8">
-            <div className="card-header">
-              <h3 className="text-xl font-bold text-gray-900">Risk Assessment</h3>
+          {/* Risk Assessment Card - Enhanced Alert Section */}
+          <div className="bg-white rounded-2xl shadow-xl border-2 border-red-200 p-8">
+            <div className="card-header mb-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-bold text-red-700 flex items-center">
+                  <AlertTriangle className="h-6 w-6 mr-2 text-red-600" />
+                  Đánh Giá Rủi Ro (Risk Assessment)
+                </h3>
+                <div className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-medium">
+                  ⚠️ Thông Tin Cảnh Báo
+                </div>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Risk Score */}
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-sm font-medium text-gray-500">Risk Score</span>
-                  <span className="text-2xl font-bold text-gray-900">
-                    {risk_assessment.risk_score}/100
+              {/* Risk Score - Enhanced Display */}
+              <div className="relative">
+                <div className="flex items-center justify-between mb-6">
+                  <span className="text-lg font-bold text-red-700 flex items-center">
+                    <AlertTriangle className="h-5 w-5 mr-2 text-red-600" />
+                    Điểm Rủi Ro (Risk Score)
                   </span>
+                  <div className={`px-4 py-2 rounded-xl font-bold text-2xl border-2 shadow-lg ${
+                    risk_assessment.risk_level === 'CRITICAL' ? 'bg-red-200 text-red-900 border-red-400 animate-pulse' :
+                    risk_assessment.risk_level === 'HIGH' ? 'bg-orange-200 text-orange-900 border-orange-400 animate-pulse' :
+                    risk_assessment.risk_level === 'MEDIUM' ? 'bg-amber-200 text-amber-900 border-amber-400' :
+                    risk_assessment.risk_level === 'LOW' ? 'bg-lime-200 text-lime-900 border-lime-400' : 
+                    'bg-green-200 text-green-900 border-green-400'
+                  }`}>
+                    {risk_assessment.risk_score}/100
+                  </div>
                 </div>
                 
-                <div className="w-full bg-gray-200 rounded-full h-3 mb-6">
+                {/* Enhanced Progress Bar */}
+                <div className="relative w-full bg-gray-200 rounded-full h-6 mb-6 overflow-hidden shadow-inner">
                   <div 
-                    className="h-3 rounded-full transition-all duration-500"
+                    className={`h-6 rounded-full transition-all duration-1000 relative ${
+                      risk_assessment.risk_level === 'CRITICAL' || risk_assessment.risk_level === 'HIGH' ? 'animate-pulse' : ''
+                    }`}
                     style={{ 
                       width: `${risk_assessment.risk_score}%`,
-                      backgroundColor: risk_assessment.risk_level === 'CRITICAL' ? '#dc2626' :
-                                       risk_assessment.risk_level === 'HIGH' ? '#ea580c' :
-                                       risk_assessment.risk_level === 'MEDIUM' ? '#d97706' :
-                                       risk_assessment.risk_level === 'LOW' ? '#65a30d' : '#16a34a'
+                      background: risk_assessment.risk_level === 'CRITICAL' ? 'linear-gradient(90deg, #dc2626, #ef4444)' :
+                                  risk_assessment.risk_level === 'HIGH' ? 'linear-gradient(90deg, #ea580c, #f97316)' :
+                                  risk_assessment.risk_level === 'MEDIUM' ? 'linear-gradient(90deg, #d97706, #f59e0b)' :
+                                  risk_assessment.risk_level === 'LOW' ? 'linear-gradient(90deg, #65a30d, #84cc16)' : 
+                                  'linear-gradient(90deg, #16a34a, #22c55e)'
                     }}
-                  />
+                  >
+                    {/* Glowing effect for high risk */}
+                    {(risk_assessment.risk_level === 'CRITICAL' || risk_assessment.risk_level === 'HIGH') && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
+                    )}
+                  </div>
+                  
+                  {/* Risk level indicator on progress bar */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-xs font-bold text-white drop-shadow-lg">
+                      {risk_assessment.risk_level}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Risk Level Badge */}
+                <div className="mb-6 flex justify-center">
+                  <div className={`px-6 py-3 rounded-xl border-2 shadow-lg font-bold text-lg ${
+                    risk_assessment.risk_level === 'CRITICAL' ? 'bg-red-100 text-red-900 border-red-400 animate-bounce' :
+                    risk_assessment.risk_level === 'HIGH' ? 'bg-orange-100 text-orange-900 border-orange-400 animate-pulse' :
+                    risk_assessment.risk_level === 'MEDIUM' ? 'bg-amber-100 text-amber-900 border-amber-400' :
+                    risk_assessment.risk_level === 'LOW' ? 'bg-lime-100 text-lime-900 border-lime-400' : 
+                    'bg-green-100 text-green-900 border-green-400'
+                  }`}>
+                    🚨 {risk_assessment.risk_level === 'CRITICAL' ? 'RỦI RO NGHIÊM TRỌNG' :
+                         risk_assessment.risk_level === 'HIGH' ? 'RỦI RO CAO' :
+                         risk_assessment.risk_level === 'MEDIUM' ? 'RỦI RO TRUNG BÌNH' :
+                         risk_assessment.risk_level === 'LOW' ? 'RỦI RO THẤP' : 'AN TOÀN'}
+                  </div>
                 </div>
 
                 {/* Enhanced Risk Info */}
@@ -371,24 +413,39 @@ export default function WalletDashboard({ address, data, loading, error }: Walle
                 )}
               </div>
 
-              {/* Risk Factors */}
+              {/* Risk Factors - Enhanced Alerts */}
               <div>
-                <h4 className="text-sm font-medium text-gray-500 mb-3">Risk Factors</h4>
+                <h4 className="text-sm font-bold text-red-600 mb-3 flex items-center">
+                  <AlertTriangle className="h-4 w-4 mr-1" />
+                  Cảnh Báo & Risk Factors
+                </h4>
                 {(risk_assessment.risk_factors?.length > 0 || data.risk_assessment?.risk_factors?.length > 0) ? (
-                  <ul className="space-y-2">
-                    {(risk_assessment.risk_factors || data.risk_assessment?.risk_factors || []).map((factor: string, index: number) => (
-                      <li key={index} className="flex items-start">
-                        <AlertTriangle className="h-4 w-4 text-amber-500 mr-2 mt-0.5 flex-shrink-0" />
-                        <span className="text-sm text-gray-700">{factor}</span>
-                      </li>
-                    ))}
-                  </ul>
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <ul className="space-y-3">
+                      {(risk_assessment.risk_factors || data.risk_assessment?.risk_factors || []).map((factor: string, index: number) => (
+                        <li key={index} className="flex items-start">
+                          <AlertTriangle className="h-5 w-5 text-red-500 mr-3 mt-0.5 flex-shrink-0" />
+                          <span className="text-sm font-medium text-red-800 bg-red-100 px-2 py-1 rounded">{factor}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 ) : (
-                  <p className="text-sm text-gray-500 italic">No significant risk factors detected</p>
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <p className="text-sm text-green-700 font-medium flex items-center">
+                      <svg className="h-4 w-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      Không phát hiện yếu tố rủi ro đáng kể
+                    </p>
+                  </div>
                 )}
               </div>
             </div>
           </div>
+
+          {/* GNN Analysis Card */}
+          <GNNAnalysis address={address} />
 
           {/* Transactions Card */}
           <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-8">
@@ -477,18 +534,16 @@ export default function WalletDashboard({ address, data, loading, error }: Walle
           )}
 
           <div className="border border-gray-200 rounded-lg overflow-hidden">
-            <InvestigationCanvas
+                            <VisJsGraph
               data={graphData}
               width={1200}
               height={700}
-              onNodeClick={(node) => {
-                if (node.properties.hash) {
-                  // In a real app, this would navigate to the new address
-                  console.log('Analyze address:', node.properties.hash);
-                }
+              onNodeClick={(nodeId) => {
+                // In a real app, this would navigate to the new address
+                console.log('Analyze address:', nodeId);
               }}
-              onNodeRightClick={(node) => {
-                console.log('Right clicked node:', node);
+              onNodeDoubleClick={(nodeId) => {
+                console.log('Double clicked node:', nodeId);
               }}
               className="w-full"
             />

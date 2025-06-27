@@ -5,12 +5,17 @@ import logging
 import os
 from datetime import datetime
 
-from app.database.neo4j_client import Neo4jClient
+from app.database.postgres_graph import PostgreSQLGraphClient
 from app.services.graph_protocol_service import GraphProtocolService
 from app.services.social_intelligence_service import SocialIntelligenceService
+from app.services.network_behavior_analyzer import NetworkBehaviorAnalyzer
+from app.services.alert_system import AlertSystem
 from app.api.graph import graph_bp, init_graph_services
 from app.api.wallet import wallet_bp, init_services
 from app.api.alert_api import alert_api
+from app.api.social_api import social_api, init_social_service
+from app.api.phase3_api import phase3_bp, init_phase3_services
+from app.api.public_api import public_api_bp
 
 def create_app():
     app = Flask(__name__)
@@ -34,9 +39,19 @@ def create_app():
             allowed_origins.append(origin.strip())
     
     # Configure CORS with more permissive settings
-    # Use supports_credentials=False and origins="*" for development
-    if os.environ.get('FLASK_ENV') == 'development':
-        CORS(app, origins="*")
+    # Check for development environment (also check DEBUG flag as fallback)
+    is_development = (os.environ.get('FLASK_ENV') == 'development' or 
+                     os.environ.get('DEBUG', 'False').lower() == 'true' or
+                     app.debug)
+    
+    if is_development:
+        # Development: Allow all origins
+        CORS(app, 
+             origins="*",
+             allow_headers=['Content-Type', 'Authorization', 'X-Requested-With'],
+             methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+             supports_credentials=False)
+        app.logger.info("🔓 CORS configured for development (allowing all origins)")
     else:
         # Production: use specific origins
         CORS(app, 
@@ -44,6 +59,7 @@ def create_app():
              allow_headers=['Content-Type', 'Authorization', 'X-Requested-With'],
              methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
              supports_credentials=False)
+        app.logger.info(f"🔒 CORS configured for production (allowed origins: {allowed_origins})")
     
     # Load environment variables
     load_dotenv()
@@ -53,22 +69,27 @@ def create_app():
         logging.basicConfig(level=logging.INFO)
     
     # Initialize Phase 2 services
-    neo4j_client = None
+    graph_client = None
     graph_service = None
     social_service = None
     
+    # Initialize Phase 3 services
+    network_analyzer = None
+    alert_system = None
+    
     # Try to initialize Phase 2 enhanced services
     try:
-        # Neo4j database client
-        neo4j_client = Neo4jClient()
-        if neo4j_client.connect():
-            app.logger.info("✅ Neo4j database connected - Enhanced analysis available")
+        # PostgreSQL Graph database client
+        graph_client = PostgreSQLGraphClient()
+        if graph_client.connect():
+            graph_client.initialize_graph_schema()
+            app.logger.info("✅ PostgreSQL Graph database connected - Enhanced analysis available")
         else:
-            app.logger.warning("⚠️ Neo4j connection failed - Falling back to Phase 1 analysis")
-            neo4j_client = None
+            app.logger.warning("⚠️ PostgreSQL Graph connection failed - Falling back to Phase 1 analysis")
+            graph_client = None
     except Exception as e:
-        app.logger.warning(f"⚠️ Neo4j initialization failed: {str(e)} - Using Phase 1 analysis")
-        neo4j_client = None
+        app.logger.warning(f"⚠️ PostgreSQL Graph initialization failed: {str(e)} - Using Phase 1 analysis")
+        graph_client = None
     
     try:
         # The Graph Protocol service
@@ -86,28 +107,70 @@ def create_app():
         app.logger.warning(f"⚠️ Social Intelligence service failed: {str(e)}")
         social_service = None
     
+    # Try to initialize Phase 3 services
+    try:
+        # Network Behavior Analyzer
+        if graph_client:
+            network_analyzer = NetworkBehaviorAnalyzer(graph_client)
+            app.logger.info("✅ Network Behavior Analyzer initialized")
+        else:
+            app.logger.warning("⚠️ Network Behavior Analyzer requires PostgreSQL Graph - skipping")
+    except Exception as e:
+        app.logger.warning(f"⚠️ Network Behavior Analyzer failed: {str(e)}")
+        network_analyzer = None
+    
+    try:
+        # Alert System
+        if graph_client:
+            alert_system = AlertSystem(graph_client)
+            app.logger.info("✅ Alert System initialized")
+        else:
+            app.logger.warning("⚠️ Alert System requires Neo4j - skipping")
+    except Exception as e:
+        app.logger.warning(f"⚠️ Alert System failed: {str(e)}")
+        alert_system = None
+    
     # Initialize services in API modules
-    if neo4j_client and graph_service and social_service:
-        init_graph_services(neo4j_client, graph_service, social_service)
-        init_services(neo4j_client, graph_service, social_service)
+    if graph_client and graph_service and social_service:
+        init_graph_services(graph_client, graph_service, social_service)
+        init_services(graph_client, graph_service, social_service)
+        init_social_service(social_service)
         app.logger.info("🚀 Phase 2 Enhanced Analysis Mode Activated")
     else:
         app.logger.info("📊 Running in Phase 1 Analysis Mode")
+        # Initialize social service even if other services are not available
+        if social_service:
+            init_social_service(social_service)
     
-    # Register blueprints
+    # Initialize Phase 3 services if available
+    if graph_client and network_analyzer and alert_system:
+        init_phase3_services(graph_client, network_analyzer, alert_system)
+        app.logger.info("🚀 Phase 3 Advanced Intelligence Mode Activated")
+    else:
+        app.logger.info("⚠️ Phase 3 services not fully available - some features may be limited")
+    
+    # Register blueprints in proper order
+    # First register graph API (always register, with fallback handling)
+    init_graph_services(graph_client, graph_service, social_service)
+    app.register_blueprint(graph_bp, url_prefix='/api/graph')
+    app.logger.info("✅ Graph API endpoints registered at /api/graph/*")
+    
+    # Register other APIs
     app.register_blueprint(wallet_bp)
     app.register_blueprint(alert_api)
+    app.register_blueprint(social_api)
+    app.register_blueprint(phase3_bp)  # Phase 3 API
+    app.register_blueprint(public_api_bp)  # Public API
+    app.logger.info("✅ Wallet API endpoints registered")
     app.logger.info("✅ Alert API endpoints registered")
+    app.logger.info("✅ Social Intelligence API endpoints registered")
+    app.logger.info("✅ Phase 3 Advanced Intelligence API endpoints registered")
+    app.logger.info("✅ Public API endpoints registered")
     
-    # Always register graph endpoints (with fallback handling for when Neo4j is unavailable)
-    init_graph_services(neo4j_client, graph_service, social_service)
-    app.register_blueprint(graph_bp, url_prefix='/api/graph')
-    app.logger.info("✅ Graph API endpoints registered")
-    
-    if neo4j_client:
-        app.logger.info("✅ Neo4j connected - Enhanced graph analysis available")
+    if graph_client:
+        app.logger.info("✅ PostgreSQL Graph connected - Enhanced graph analysis available")
     else:
-        app.logger.info("⚠️ Neo4j unavailable - Graph endpoints will return fallback responses")
+        app.logger.info("⚠️ PostgreSQL Graph unavailable - Graph endpoints will return fallback responses")
     
     # Health check endpoint
     @app.route('/health')
@@ -120,35 +183,35 @@ def create_app():
             "version": "2.0",
             "services": {
                 "etherscan": "available",
-                "neo4j": "available" if neo4j_client else "unavailable",
+                "postgres_graph": "available" if graph_client else "unavailable",
                 "graph_protocol": "available" if graph_service else "unavailable", 
                 "social_intelligence": "available" if social_service else "unavailable"
             },
-            "analysis_mode": "enhanced" if neo4j_client else "standard",
+            "analysis_mode": "enhanced" if graph_client else "standard",
             "features": {
                 "wallet_analysis": True,
-                "graph_visualization": bool(neo4j_client),
+                "graph_visualization": bool(graph_client),
                 "social_intelligence": bool(social_service),
                 "historical_data": bool(graph_service),
-                "investigation_canvas": bool(neo4j_client)
+                "investigation_canvas": bool(graph_client)
             }
         }
         
         # Database connectivity check
-        if neo4j_client:
+        if graph_client:
             try:
-                stats = neo4j_client.get_database_stats()
+                stats = graph_client.get_graph_stats()
                 status["database"] = {
                     "connected": True,
-                    "node_count": stats.get('address_count', 0) + stats.get('transaction_count', 0),
-                    "relationship_count": stats.get('sent_to_count', 0) + stats.get('interacted_with_count', 0)
+                    "node_count": stats.get('total_nodes', 0),
+                    "relationship_count": stats.get('total_edges', 0)
                 }
             except Exception as e:
                 status["database"] = {
                     "connected": False,
                     "error": str(e)
                 }
-                status["services"]["neo4j"] = "error"
+                status["services"]["postgres_graph"] = "error"
         
         return jsonify(status)
     
@@ -176,7 +239,7 @@ def create_app():
             }
         }
         
-        if neo4j_client:
+        if graph_client:
             endpoints["phase_2"] = {
                 "enhanced_analysis": "/api/v1/wallet/{address}",
                 "graph_subgraph": "/api/graph/subgraph/{address}",
@@ -191,7 +254,7 @@ def create_app():
             "name": "Sentinel Threat Intelligence API",
             "version": "2.0",
             "description": "Next-generation blockchain threat intelligence platform",
-            "phase": "enhanced" if neo4j_client else "standard",
+            "phase": "enhanced" if graph_client else "standard",
             "endpoints": endpoints,
             "documentation": "/docs",
             "health": "/health"
@@ -217,10 +280,29 @@ def create_app():
     # Cleanup on app teardown
     @app.teardown_appcontext
     def cleanup(error):
-        if neo4j_client:
+        if graph_client:
             try:
-                neo4j_client.close()
+                graph_client.close()
             except:
                 pass
     
     return app 
+
+if __name__ == '__main__':
+    # Create and run the application
+    app = create_app()
+    
+    # Development server configuration
+    debug_mode = os.environ.get('FLASK_ENV') == 'development' or os.environ.get('DEBUG', 'False').lower() == 'true'
+    port = int(os.environ.get('PORT', 5000))
+    
+    print(f"🌐 Running on http://localhost:{port}")
+    print(f"🔧 Debug mode: {debug_mode}")
+    print("📊 Health check: http://localhost:5000/health")
+    print("📋 API info: http://localhost:5000/api/info")
+    
+    app.run(
+        host='0.0.0.0',
+        port=port,
+        debug=debug_mode
+    ) 

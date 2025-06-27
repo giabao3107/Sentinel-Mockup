@@ -17,6 +17,7 @@ export default function Layout({ children }: LayoutProps) {
   const navItems = [
     { href: '/', label: 'Dashboard', icon: Network },
     { href: '/graph', label: 'Graph Analysis', icon: Brain },
+    { href: '/gnn', label: 'AI/GNN', icon: Brain, isNew: true },
     { href: '/social', label: 'Social Intel', icon: Globe },
     { href: '/alerts', label: 'Alerts', icon: AlertCircle },
     { href: '/docs', label: 'Documentation', icon: BookOpen }
@@ -49,6 +50,7 @@ export default function Layout({ children }: LayoutProps) {
               {navItems.map((item) => {
                 const IconComponent = item.icon;
                 const active = isActive(item.href);
+                const isGNN = item.href === '/gnn';
                 
                 return (
               <Link
@@ -56,14 +58,21 @@ export default function Layout({ children }: LayoutProps) {
                     href={item.href}
                     className={`flex items-center space-x-2 font-medium transition-colors relative ${
                       active 
-                        ? 'text-blue-600' 
-                        : 'text-gray-600 hover:text-gray-900'
+                        ? isGNN ? 'text-purple-600' : 'text-blue-600'
+                        : isGNN ? 'text-purple-600 hover:text-purple-700' : 'text-gray-600 hover:text-gray-900'
                     }`}
                   >
                     <IconComponent className="h-4 w-4" />
                     <span>{item.label}</span>
+                    {item.isNew && (
+                      <span className="ml-1 px-1.5 py-0.5 bg-purple-100 text-purple-700 text-xs font-medium rounded">
+                        NEW
+                      </span>
+                    )}
                     {active && (
-                      <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-blue-600 rounded-full"></div>
+                      <div className={`absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-1 h-1 rounded-full ${
+                        isGNN ? 'bg-purple-600' : 'bg-blue-600'
+                      }`}></div>
                     )}
               </Link>
                 );
@@ -252,7 +261,7 @@ export default function Layout({ children }: LayoutProps) {
                     <Network className="h-5 w-5 mr-2 text-blue-400" />
                     <h4 className="font-medium">Graph Visualization</h4>
                   </div>
-                  <p className="text-gray-400 text-sm">Interactive D3.js network analysis with Neo4j backend</p>
+                  <p className="text-gray-400 text-sm">Interactive Vis.js network analysis with PostgreSQL backend</p>
                 </div>
                 
                 <div className="p-4 bg-white/5 backdrop-blur-sm rounded-lg border border-white/10">

@@ -1,0 +1,166 @@
+{
+  "import_summary": {
+    "total_addresses": 30,
+    "successful_imports": 0,
+    "failed_imports": 30,
+    "success_rate": "0.0%",
+    "timestamp": "2025-06-27T22:40:29.993715"
+  },
+  "detailed_results": [
+    {
+      "address": "0xE592427A0AEce92De3Edee1F18E0157C05861564",
+      "status": "error",
+      "error": "404, message='Attempt to decode JSON with unexpected mimetype: text/html; charset=utf-8', url='http://localhost:5000/api/graph/import-address-data/0xE592427A0AEce92De3Edee1F18E0157C05861564'"
+    },
+    {
+      "address": "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45",
+      "status": "error",
+      "error": "404, message='Attempt to decode JSON with unexpected mimetype: text/html; charset=utf-8', url='http://localhost:5000/api/graph/import-address-data/0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45'"
+    },
+    {
+      "address": "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
+      "status": "error",
+      "error": "500, message='Attempt to decode JSON with unexpected mimetype: text/html; charset=utf-8', url='http://localhost:5000/api/graph/import-address-data/0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D'"
+    },
+    {
+      "address": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+      "status": "error",
+      "error": "404, message='Attempt to decode JSON with unexpected mimetype: text/html; charset=utf-8', url='http://localhost:5000/api/graph/import-address-data/0x6B175474E89094C44Da98b954EedeAC495271d0F'"
+    },
+    {
+      "address": "0xA0b86a33E6417aF5E73Ca0e0b17F03A0d6291F38",
+      "status": "error",
+      "error": "500, message='Attempt to decode JSON with unexpected mimetype: text/html; charset=utf-8', url='http://localhost:5000/api/graph/import-address-data/0xA0b86a33E6417aF5E73Ca0e0b17F03A0d6291F38'"
+    },
+    {
+      "address": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+      "status": "error",
+      "error": "500, message='Attempt to decode JSON with unexpected mimetype: text/html; charset=utf-8', url='http://localhost:5000/api/graph/import-address-data/0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'"
+    },
+    {
+      "address": "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
+      "status": "error",
+      "error": "404, message='Attempt to decode JSON with unexpected mimetype: text/html; charset=utf-8', url='http://localhost:5000/api/graph/import-address-data/0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B'"
+    },
+    {
+      "address": "0x220866B1A2219f40e72f5c628B65D54268cA3A9D",
+      "status": "error",
+      "error": "500, message='Attempt to decode JSON with unexpected mimetype: text/html; charset=utf-8', url='http://localhost:5000/api/graph/import-address-data/0x220866B1A2219f40e72f5c628B65D54268cA3A9D'"
+    },
+    {
+      "address": "0x28C6c06298d514Db089934071355E5743bf21d60",
+      "status": "error",
+      "error": "404, message='Attempt to decode JSON with unexpected mimetype: text/html; charset=utf-8', url='http://localhost:5000/api/graph/import-address-data/0x28C6c06298d514Db089934071355E5743bf21d60'"
+    },
+    {
+      "address": "0x21a31Ee1afC51d94C2eFcCAa2092AD1028285549",
+      "status": "error",
+      "error": "500, message='Attempt to decode JSON with unexpected mimetype: text/html; charset=utf-8', url='http://localhost:5000/api/graph/import-address-data/0x21a31Ee1afC51d94C2eFcCAa2092AD1028285549'"
+    },
+    {
+      "address": "0x47ac0Fb4F2D84898e4D9E7b4DaB3C24507a6D503",
+      "status": "error",
+      "error": "404, message='Attempt to decode JSON with unexpected mimetype: text/html; charset=utf-8', url='http://localhost:5000/api/graph/import-address-data/0x47ac0Fb4F2D84898e4D9E7b4DaB3C24507a6D503'"
+    },
+    {
+      "address": "0x06601571AA9D3E8f5f7CDd5b993192618964bAB5",
+      "status": "error",
+      "error": "500, message='Attempt to decode JSON with unexpected mimetype: text/html; charset=utf-8', url='http://localhost:5000/api/graph/import-address-data/0x06601571AA9D3E8f5f7CDd5b993192618964bAB5'"
+    },
+    {
+      "address": "0x8Eb8a3b98659Cce290402893d0123abb75E3ab28",
+      "status": "error",
+      "error": "404, message='Attempt to decode JSON with unexpected mimetype: text/html; charset=utf-8', url='http://localhost:5000/api/graph/import-address-data/0x8Eb8a3b98659Cce290402893d0123abb75E3ab28'"
+    },
+    {
+      "address": "0x4F4495243837681061C4743b74B3eEdf548D56A5",
+      "status": "error",
+      "error": "500, message='Attempt to decode JSON with unexpected mimetype: text/html; charset=utf-8', url='http://localhost:5000/api/graph/import-address-data/0x4F4495243837681061C4743b74B3eEdf548D56A5'"
+    },
+    {
+      "address": "0x9696f59E4d72E237BE84fFD425DCaD154Bf96976",
+      "status": "error",
+      "error": "404, message='Attempt to decode JSON with unexpected mimetype: text/html; charset=utf-8', url='http://localhost:5000/api/graph/import-address-data/0x9696f59E4d72E237BE84fFD425DCaD154Bf96976'"
+    },
+    {
+      "address": "0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed",
+      "status": "error",
+      "error": "500, message='Attempt to decode JSON with unexpected mimetype: text/html; charset=utf-8', url='http://localhost:5000/api/graph/import-address-data/0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed'"
+    },
+    {
+      "address": "0xee2826453A4Fd5AfeB7ceffeEF3fFA2320081268",
+      "status": "error",
+      "error": "404, message='Attempt to decode JSON with unexpected mimetype: text/html; charset=utf-8', url='http://localhost:5000/api/graph/import-address-data/0xee2826453A4Fd5AfeB7ceffeEF3fFA2320081268'"
+    },
+    {
+      "address": "0x000000000000084e91743124a982076C59f10084",
+      "status": "error",
+      "error": "500, message='Attempt to decode JSON with unexpected mimetype: text/html; charset=utf-8', url='http://localhost:5000/api/graph/import-address-data/0x000000000000084e91743124a982076C59f10084'"
+    },
+    {
+      "address": "0x6F1cDbBb4d53d226CF4B917bF768B94acbAB6168",
+      "status": "error",
+      "error": "404, message='Attempt to decode JSON with unexpected mimetype: text/html; charset=utf-8', url='http://localhost:5000/api/graph/import-address-data/0x6F1cDbBb4d53d226CF4B917bF768B94acbAB6168'"
+    },
+    {
+      "address": "0x54BE3a794282C030b15E43aE2bB182E14c409C5e",
+      "status": "error",
+      "error": "500, message='Attempt to decode JSON with unexpected mimetype: text/html; charset=utf-8', url='http://localhost:5000/api/graph/import-address-data/0x54BE3a794282C030b15E43aE2bB182E14c409C5e'"
+    },
+    {
+      "address": "0xB64d0b0b1C7aFaa8E4b6A19e8E1D4659F7b6B88f",
+      "status": "error",
+      "error": "404, message='Attempt to decode JSON with unexpected mimetype: text/html; charset=utf-8', url='http://localhost:5000/api/graph/import-address-data/0xB64d0b0b1C7aFaa8E4b6A19e8E1D4659F7b6B88f'"
+    },
+    {
+      "address": "0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643",
+      "status": "error",
+      "error": "500, message='Attempt to decode JSON with unexpected mimetype: text/html; charset=utf-8', url='http://localhost:5000/api/graph/import-address-data/0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643'"
+    },
+    {
+      "address": "0x028171bCA77440897B824Ca71D1c56caC55b68A3",
+      "status": "error",
+      "error": "404, message='Attempt to decode JSON with unexpected mimetype: text/html; charset=utf-8', url='http://localhost:5000/api/graph/import-address-data/0x028171bCA77440897B824Ca71D1c56caC55b68A3'"
+    },
+    {
+      "address": "0x39AA39c021dfbaE8faC545936693aC917d5E7563",
+      "status": "error",
+      "error": "500, message='Attempt to decode JSON with unexpected mimetype: text/html; charset=utf-8', url='http://localhost:5000/api/graph/import-address-data/0x39AA39c021dfbaE8faC545936693aC917d5E7563'"
+    },
+    {
+      "address": "0x3dfd23A6c5E8BbcFc9581d2E864a68feb6a076d3",
+      "status": "error",
+      "error": "404, message='Attempt to decode JSON with unexpected mimetype: text/html; charset=utf-8', url='http://localhost:5000/api/graph/import-address-data/0x3dfd23A6c5E8BbcFc9581d2E864a68feb6a076d3'"
+    },
+    {
+      "address": "0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9",
+      "status": "error",
+      "error": "404, message='Attempt to decode JSON with unexpected mimetype: text/html; charset=utf-8', url='http://localhost:5000/api/graph/import-address-data/0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9'"
+    },
+    {
+      "address": "0x85Eee30c52B0b379b046Fb0F85F4f3Dc3009aFEC",
+      "status": "error",
+      "error": "404, message='Attempt to decode JSON with unexpected mimetype: text/html; charset=utf-8', url='http://localhost:5000/api/graph/import-address-data/0x85Eee30c52B0b379b046Fb0F85F4f3Dc3009aFEC'"
+    },
+    {
+      "address": "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "status": "error",
+      "error": "500, message='Attempt to decode JSON with unexpected mimetype: text/html; charset=utf-8', url='http://localhost:5000/api/graph/import-address-data/0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'"
+    },
+    {
+      "address": "0x1111111111111111111111111111111111111111",
+      "status": "error",
+      "error": "404, message='Attempt to decode JSON with unexpected mimetype: text/html; charset=utf-8', url='http://localhost:5000/api/graph/import-address-data/0x1111111111111111111111111111111111111111'"
+    },
+    {
+      "address": "0x2222222222222222222222222222222222222222",
+      "status": "error",
+      "error": "500, message='Attempt to decode JSON with unexpected mimetype: text/html; charset=utf-8', url='http://localhost:5000/api/graph/import-address-data/0x2222222222222222222222222222222222222222'"
+    }
+  ],
+  "statistics": {
+    "total_new_addresses": 0,
+    "total_transactions": 0,
+    "total_relationships": 0
+  }
+}

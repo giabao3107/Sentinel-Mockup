@@ -606,8 +606,6 @@ NEXT_PUBLIC_ETHERSCAN_URL=https://etherscan.io
 # Install dependencies
 pip install -r requirements.txt
 
-# Initialize database
-python scripts/init_database.py
 
 # Run development server
 python run.py

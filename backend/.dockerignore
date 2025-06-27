@@ -1,0 +1,50 @@
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env
+.env
+.venv
+venv/
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.cache
+
+# Documentation
+docs/_build/
+*.md
+
+# Git
+.git
+.gitignore
+
+# Logs
+logs/
+*.log
+
+# Database
+*.db
+*.sqlite3
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Development
+scripts/
+tests/ 

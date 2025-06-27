@@ -1,10 +1,55 @@
 {
+  "name": "sentinel-frontend",
+  "version": 2,
   "functions": {
     "pages/api/**/*.js": {
       "maxDuration": 30
     }
   },
-  "rewrites": [],
+  "env": {
+    "NEXT_PUBLIC_API_URL": "https://sentinel-backend.onrender.com",
+    "NEXT_PUBLIC_APP_NAME": "Sentinel",
+    "NEXT_PUBLIC_APP_VERSION": "2.0"
+  },
+  "build": {
+    "env": {
+      "NEXT_TELEMETRY_DISABLED": "1"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/health",
+      "destination": "https://sentinel-backend.onrender.com/health"
+    },
+    {
+      "source": "/api/info",
+      "destination": "https://sentinel-backend.onrender.com/api/info"
+    },
+    {
+      "source": "/api/graph/:path*",
+      "destination": "https://sentinel-backend.onrender.com/api/graph/:path*"
+    },
+    {
+      "source": "/api/v1/:path*",
+      "destination": "https://sentinel-backend.onrender.com/api/v1/:path*"
+    },
+    {
+      "source": "/api/v3/:path*",
+      "destination": "https://sentinel-backend.onrender.com/api/v3/:path*"
+    },
+    {
+      "source": "/api/social/:path*", 
+      "destination": "https://sentinel-backend.onrender.com/api/social/:path*"
+    },
+    {
+      "source": "/api/alerts/:path*",
+      "destination": "https://sentinel-backend.onrender.com/api/alerts/:path*"
+    },
+    {
+      "source": "/api/public/:path*",
+      "destination": "https://sentinel-backend.onrender.com/api/public/:path*"
+    }
+  ],
   "headers": [
     {
       "source": "/api/(.*)",
@@ -19,9 +64,20 @@
         },
         {
           "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type, Authorization"
+          "value": "Content-Type, Authorization, X-Requested-With"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "s-maxage=60, stale-while-revalidate"
         }
       ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/index",
+      "permanent": false
     }
   ]
 } 

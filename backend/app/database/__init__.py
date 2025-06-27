@@ -1,8 +1,8 @@
 """
-Sentinel Database - Neo4j Graph Database Integration
+Sentinel Database - PostgreSQL Graph Database Integration
 """
 
-from .neo4j_client import Neo4jClient
+from .postgres_graph import PostgreSQLGraphClient
 from .models import *
 
-__all__ = ['Neo4jClient'] 
+__all__ = ['PostgreSQLGraphClient'] 

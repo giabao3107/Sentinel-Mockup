@@ -1,21 +1,35 @@
 services:
-  # Backend API Service
+  # Sentinel Backend API
   - type: web
     name: sentinel-backend
-    env: python
+    runtime: python3
     plan: free
-    buildCommand: pip install -r requirements.txt
-    startCommand: cd backend && python run.py
+    buildCommand: |
+      cd backend && pip install -r requirements.txt
+    startCommand: |
+      cd backend && python app.py
     envVars:
       - key: FLASK_ENV
         value: production
-      - key: PYTHONUNBUFFERED
-        value: "1"
+      - key: DEBUG
+        value: false
       - key: PORT
-        value: "5000"
+        value: 5000
+      - key: CORS_ORIGINS
+        value: https://sentinel-frontend.vercel.app,https://localhost:3000
+      - key: DATABASE_URL
+        generateValue: true
+      - key: ETHERSCAN_API_KEY
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
     healthCheckPath: /health
-
-databases:
+    
   # PostgreSQL Database
-  - name: sentinel-postgres
-    plan: free 
+  - type: pserv
+    name: sentinel-postgres
+    plan: free
+    env: postgresql
+    databases:
+      - name: sentinel
+        user: sentinel 

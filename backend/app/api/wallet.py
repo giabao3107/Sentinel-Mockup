@@ -11,7 +11,7 @@ from app.api import wallet_bp
 from app.services.etherscan_service import EtherscanService
 from app.services.risk_scorer import RiskScorer
 from app.utils.helpers import is_valid_ethereum_address, format_wei_to_ether
-from ..database.neo4j_client import Neo4jClient
+from ..database.postgres_graph import PostgreSQLGraphClient
 from ..services.graph_protocol_service import GraphProtocolService
 from ..services.social_intelligence_service import SocialIntelligenceService
 
@@ -19,14 +19,14 @@ from ..services.social_intelligence_service import SocialIntelligenceService
 logger = logging.getLogger(__name__)
 
 # Add service instances for Phase 2
-neo4j_client: Neo4jClient = None
+graph_client: PostgreSQLGraphClient = None
 graph_service: GraphProtocolService = None
 social_service: SocialIntelligenceService = None
 
-def init_services(neo4j: Neo4jClient, graph: GraphProtocolService, social: SocialIntelligenceService):
+def init_services(graph_db: PostgreSQLGraphClient, graph: GraphProtocolService, social: SocialIntelligenceService):
     """Initialize Phase 2 services"""
-    global neo4j_client, graph_service, social_service
-    neo4j_client = neo4j
+    global graph_client, graph_service, social_service
+    graph_client = graph_db
     graph_service = graph
     social_service = social
 
@@ -176,9 +176,9 @@ def get_wallet_analysis(address):
         has_graph_data = False
         graph_analytics = None
         
-        if neo4j_client:
+        if graph_client:
             try:
-                graph_analytics = neo4j_client.get_address_analytics(address)
+                graph_analytics = graph_client.get_address_analytics(address)
                 has_graph_data = graph_analytics is not None
             except Exception as e:
                 logger.warning(f"Could not fetch graph data for {address}: {str(e)}")

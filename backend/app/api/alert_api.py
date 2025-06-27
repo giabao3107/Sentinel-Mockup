@@ -8,7 +8,7 @@ from datetime import datetime
 import logging
 
 from ..services.alert_system import AlertSystem, AlertSeverity, AlertStatus, NotificationChannel
-from ..database.neo4j_client import Neo4jClient
+from ..database.postgres_graph import PostgreSQLGraphClient
 
 logger = logging.getLogger(__name__)
 
@@ -16,8 +16,8 @@ logger = logging.getLogger(__name__)
 alert_api = Blueprint('alert_api', __name__)
 
 # Initialize AlertSystem (in production, use dependency injection)
-neo4j_client = Neo4jClient()
-alert_system = AlertSystem(neo4j_client)
+graph_client = PostgreSQLGraphClient()
+alert_system = AlertSystem(graph_client)
 
 @alert_api.route('/api/alerts/rules', methods=['GET'])
 def get_alert_rules():
