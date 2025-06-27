@@ -1,32 +1,34 @@
-# Use Python 3.12 slim image for better performance
-FROM python:3.12-slim
+# Multi-stage build for minimal image size
+FROM python:3.12-alpine AS builder
+
+# Install build dependencies
+RUN apk add --no-cache gcc musl-dev linux-headers
+
+# Copy requirements and install dependencies
+COPY requirements-minimal.txt .
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements-minimal.txt
+
+# Final stage - minimal runtime image
+FROM python:3.12-alpine AS runtime
+
+# Copy installed packages from builder
+COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    gcc \
-    g++ \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy requirements first for better caching
-COPY requirements.txt .
-
-# Install Python dependencies with optimizations
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu && \
-    pip install --no-cache-dir -r requirements.txt
-
-# Copy backend code
+# Copy only backend code
 COPY backend/ .
+
+# Create non-root user for security
+RUN adduser -D -s /bin/sh appuser && \
+    chown -R appuser:appuser /app
+USER appuser
 
 # Expose port
 EXPOSE 5000
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:5000/health')" || exit 1
 
 # Run the application
 CMD ["python", "run.py"] 
