@@ -8,6 +8,7 @@
 /* Global styles */
 html {
   scroll-behavior: smooth;
+  font-family: 'Inter', system-ui, sans-serif;
 }
 
 body {
@@ -90,13 +91,28 @@ body {
     @apply animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600;
   }
   
-  /* Gradient backgrounds */
-  .bg-gradient-primary {
-    @apply bg-gradient-to-r from-primary-600 to-primary-700;
+  /* Enhanced cards */
+  .enhanced-card {
+    @apply bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20;
+    @apply transition-all duration-300 hover:shadow-2xl hover:bg-white/90;
   }
   
-  .bg-gradient-dark {
-    @apply bg-gradient-to-br from-gray-800 via-gray-900 to-black;
+  .enhanced-input {
+    @apply w-full px-4 py-3 bg-white/80 backdrop-blur-sm border border-gray-200 rounded-xl;
+    @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+    @apply transition-all duration-200 placeholder-gray-400 text-black;
+  }
+  
+  .button-primary {
+    @apply px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-medium rounded-xl;
+    @apply transition-all duration-200 hover:from-blue-600 hover:to-indigo-700 hover:shadow-lg;
+    @apply active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+  }
+  
+  .button-secondary {
+    @apply px-6 py-3 bg-white/80 backdrop-blur-sm text-gray-700 font-medium rounded-xl border border-gray-200;
+    @apply transition-all duration-200 hover:bg-white hover:shadow-lg hover:border-gray-300;
+    @apply active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2;
   }
 }
 
@@ -108,6 +124,21 @@ body {
   
   .text-shadow-lg {
     text-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+  
+  .text-gradient {
+    @apply text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600;
+  }
+  
+  /* Background patterns */
+  .bg-grid-pattern {
+    background-image: radial-gradient(circle at 1px 1px, rgba(59, 130, 246, 0.15) 1px, transparent 0);
+    background-size: 20px 20px;
+  }
+  
+  /* Glassmorphism */
+  .glass {
+    @apply bg-white/10 backdrop-blur-lg border border-white/20;
   }
   
   /* Scrollbar styles */
@@ -132,303 +163,6 @@ body {
   
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
     background: #6b7280;
-  }
-
-  /* Enhanced Phase 2 Styles */
-  @layer base {
-    html {
-      font-family: 'Inter', system-ui, sans-serif;
-    }
-    
-    body {
-      @apply antialiased;
-    }
-  }
-
-  @layer utilities {
-    /* Enhanced Background Patterns */
-    .bg-grid-pattern {
-      background-image: radial-gradient(circle at 1px 1px, rgba(59, 130, 246, 0.15) 1px, transparent 0);
-      background-size: 20px 20px;
-    }
-    
-    .bg-dot-pattern {
-      background-image: radial-gradient(circle at 1px 1px, rgba(99, 102, 241, 0.2) 1px, transparent 0);
-      background-size: 16px 16px;
-    }
-
-    /* Enhanced Glassmorphism */
-    .glass {
-      @apply bg-white/10 backdrop-blur-lg border border-white/20;
-    }
-    
-    .glass-strong {
-      @apply bg-white/20 backdrop-blur-xl border border-white/30;
-    }
-
-    /* Enhanced Gradients */
-    .gradient-primary {
-      background: linear-gradient(135deg, #3b82f6 0%, #6366f1 50%, #8b5cf6 100%);
-    }
-    
-    .gradient-secondary {
-      background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 50%, #6366f1 100%);
-    }
-    
-    .gradient-success {
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    }
-    
-    .gradient-warning {
-      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-    }
-    
-    .gradient-danger {
-      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-    }
-
-    /* Enhanced Text Effects */
-    .text-gradient {
-      @apply text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600;
-    }
-    
-    .text-gradient-purple {
-      @apply text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600;
-    }
-    
-    .text-shadow {
-      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-    
-    .text-shadow-lg {
-      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-    }
-
-    /* Enhanced Card Styles */
-    .card-glass {
-      @apply bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl shadow-xl;
-    }
-    
-    .card-gradient {
-      @apply bg-gradient-to-br from-white/90 to-blue-50/90 backdrop-blur-sm border border-white/30 rounded-2xl shadow-xl;
-    }
-    
-    .card-hover {
-      @apply transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 hover:scale-[1.02];
-    }
-
-    /* Enhanced Animations */
-    .animate-float {
-      animation: float 3s ease-in-out infinite;
-    }
-    
-    .animate-pulse-glow {
-      animation: pulse-glow 2s ease-in-out infinite;
-    }
-    
-    .animate-gradient {
-      animation: gradient 8s ease infinite;
-      background-size: 200% 200%;
-    }
-    
-    .animate-slide-up {
-      animation: slide-up 0.6s ease-out;
-    }
-    
-    .animate-slide-in-right {
-      animation: slide-in-right 0.8s ease-out;
-    }
-    
-    .animate-scale-in {
-      animation: scale-in 0.4s ease-out;
-    }
-
-    /* Enhanced Interactive Elements */
-    .interactive-card {
-      @apply transition-all duration-300 cursor-pointer;
-      @apply hover:shadow-xl hover:-translate-y-1 hover:bg-white/90;
-      @apply active:scale-[0.98] active:shadow-lg;
-    }
-    
-    .button-primary {
-      @apply px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-medium rounded-xl;
-      @apply transition-all duration-200 hover:from-blue-600 hover:to-indigo-700 hover:shadow-lg;
-      @apply active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
-    }
-    
-    .button-secondary {
-      @apply px-6 py-3 bg-white/80 backdrop-blur-sm text-gray-700 font-medium rounded-xl border border-gray-200;
-      @apply transition-all duration-200 hover:bg-white hover:shadow-lg hover:border-gray-300;
-      @apply active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2;
-    }
-    
-    .button-ghost {
-      @apply px-4 py-2 text-gray-600 font-medium rounded-lg;
-      @apply transition-colors duration-200 hover:text-gray-900 hover:bg-gray-100;
-      @apply active:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2;
-    }
-
-    /* Enhanced Status Indicators */
-    .status-online {
-      @apply relative before:absolute before:inset-0 before:rounded-full before:bg-green-400 before:animate-ping;
-      @apply bg-green-500 rounded-full;
-    }
-    
-    .status-loading {
-      @apply relative before:absolute before:inset-0 before:rounded-full before:bg-blue-400 before:animate-pulse;
-      @apply bg-blue-500 rounded-full;
-    }
-    
-    .status-error {
-      @apply relative before:absolute before:inset-0 before:rounded-full before:bg-red-400 before:animate-pulse;
-      @apply bg-red-500 rounded-full;
-    }
-
-    /* Enhanced Risk Level Colors */
-    .risk-minimal {
-      @apply bg-gradient-to-r from-green-50 to-emerald-50 text-green-800 border-green-200;
-    }
-    
-    .risk-low {
-      @apply bg-gradient-to-r from-blue-50 to-cyan-50 text-blue-800 border-blue-200;
-    }
-    
-    .risk-medium {
-      @apply bg-gradient-to-r from-yellow-50 to-amber-50 text-yellow-800 border-yellow-200;
-    }
-    
-    .risk-high {
-      @apply bg-gradient-to-r from-orange-50 to-red-50 text-orange-800 border-orange-200;
-    }
-    
-    .risk-critical {
-      @apply bg-gradient-to-r from-red-50 to-pink-50 text-red-800 border-red-200;
-    }
-
-    /* Enhanced Graph Visualization */
-    .graph-node {
-      @apply transition-all duration-200 cursor-pointer;
-      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
-    }
-    
-    .graph-node:hover {
-      filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
-      transform: scale(1.1);
-    }
-    
-    .graph-edge {
-      @apply transition-all duration-200;
-      stroke-width: 2;
-      opacity: 0.6;
-    }
-    
-    .graph-edge:hover {
-      stroke-width: 3;
-      opacity: 1;
-    }
-
-    /* Enhanced Scrollbars */
-    .custom-scrollbar::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
-    
-    .custom-scrollbar::-webkit-scrollbar-track {
-      @apply bg-gray-100 rounded-full;
-    }
-    
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-      @apply bg-gray-300 rounded-full hover:bg-gray-400;
-    }
-  }
-
-  /* Enhanced Keyframe Animations */
-  @keyframes float {
-    0%, 100% {
-      transform: translateY(0px);
-    }
-    50% {
-      transform: translateY(-10px);
-    }
-  }
-
-  @keyframes pulse-glow {
-    0%, 100% {
-      box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
-    }
-    50% {
-      box-shadow: 0 0 30px rgba(59, 130, 246, 0.6);
-    }
-  }
-
-  @keyframes gradient {
-    0% {
-      background-position: 0% 50%;
-    }
-    50% {
-      background-position: 100% 50%;
-    }
-    100% {
-      background-position: 0% 50%;
-    }
-  }
-
-  @keyframes slide-up {
-    from {
-      opacity: 0;
-      transform: translateY(30px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes slide-in-right {
-    from {
-      opacity: 0;
-      transform: translateX(30px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
-  }
-
-  @keyframes scale-in {
-    from {
-      opacity: 0;
-      transform: scale(0.9);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1);
-    }
-  }
-
-  /* Enhanced Component Styles */
-  @layer components {
-    .enhanced-card {
-      @apply bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20;
-      @apply transition-all duration-300 hover:shadow-2xl hover:bg-white/90;
-    }
-    
-    .enhanced-input {
-      @apply w-full px-4 py-3 bg-white/80 backdrop-blur-sm border border-gray-200 rounded-xl;
-      @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
-      @apply transition-all duration-200 placeholder-gray-400 text-black;
-    }
-    
-    .enhanced-badge {
-      @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
-      @apply transition-all duration-200 hover:shadow-md;
-    }
-    
-    .enhanced-tooltip {
-      @apply absolute z-10 px-3 py-2 text-sm text-white bg-gray-900 rounded-lg shadow-lg;
-      @apply opacity-0 invisible transition-all duration-200;
-      @apply group-hover:opacity-100 group-hover:visible;
-    }
   }
 }
 
