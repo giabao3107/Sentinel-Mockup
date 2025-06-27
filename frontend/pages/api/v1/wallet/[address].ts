@@ -62,10 +62,23 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  // Set CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  // Add comprehensive error logging at the start
+  console.log('=== WALLET API START ===');
+  console.log('Method:', req.method);
+  console.log('URL:', req.url);
+  console.log('Query:', req.query);
+  console.log('Headers:', req.headers);
+  
+  // Set CORS headers first
+  try {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    console.log('CORS headers set successfully');
+  } catch (corsError) {
+    console.error('Failed to set CORS headers:', corsError);
+    return res.status(500).json({ error: 'CORS setup failed' });
+  }
 
   if (req.method === 'OPTIONS') {
     res.status(200).end();

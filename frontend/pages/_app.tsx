@@ -22,9 +22,8 @@ export default function App({ Component, pageProps }: AppProps) {
         <meta name="twitter:title" content="Sentinel - On-chain Threat Intelligence" />
         <meta name="twitter:description" content="Proactive threat intelligence for Web3 security researchers and developers" />
         
-        {/* Security Headers */}
+        {/* Security Headers - Note: X-Frame-Options is set via next.config.js headers, not meta tags */}
         <meta httpEquiv="X-Content-Type-Options" content="nosniff" />
-        <meta httpEquiv="X-Frame-Options" content="DENY" />
         <meta httpEquiv="X-XSS-Protection" content="1; mode=block" />
       </Head>
       
