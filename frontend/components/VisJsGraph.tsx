@@ -384,10 +384,13 @@ const VisJsGraph: React.FC<VisJsGraphProps> = ({
     });
   };
 
+  const [physicsEnabled, setPhysicsEnabled] = useState(true);
+
   const togglePhysics = () => {
     if (networkRef.current) {
-      const currentPhysics = networkRef.current.physics.physicsEnabled;
-      networkRef.current.setOptions({ physics: { enabled: !currentPhysics } });
+      const newPhysicsState = !physicsEnabled;
+      networkRef.current.setOptions({ physics: { enabled: newPhysicsState } });
+      setPhysicsEnabled(newPhysicsState);
     }
   };
 
@@ -436,9 +439,13 @@ const VisJsGraph: React.FC<VisJsGraphProps> = ({
             </button>
             <button
               onClick={togglePhysics}
-              className="px-3 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600 transition-colors"
+              className={`px-3 py-1 text-white rounded text-sm transition-colors ${
+                physicsEnabled 
+                  ? 'bg-green-500 hover:bg-green-600' 
+                  : 'bg-red-500 hover:bg-red-600'
+              }`}
             >
-              Toggle Physics
+              Physics: {physicsEnabled ? 'ON' : 'OFF'}
             </button>
           </div>
           
