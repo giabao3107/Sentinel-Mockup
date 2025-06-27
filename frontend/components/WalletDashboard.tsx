@@ -103,7 +103,7 @@ export default function WalletDashboard({ address, data, loading, error }: Walle
   // Handle both Phase 1 and Phase 2 data structures
   const wallet_info = data.wallet_info || {
     balance: { ether: data.balance || 0, usd_value: 0 },
-    transaction_count: data.transaction_count || data.transactions?.length || 0,
+    transaction_count: data.transaction_count || (Array.isArray(data.transactions) ? data.transactions.length : data.transactions?.recent?.length) || 0,
     token_count: data.tokens?.length || 0,
     first_transaction: null
   };
@@ -115,7 +115,7 @@ export default function WalletDashboard({ address, data, loading, error }: Walle
     behavioral_tags: []
   };
 
-  const transactions = data.transactions || { recent: data.transactions || [], total_count: 0 };
+  const transactions = data.transactions || { recent: (Array.isArray(data.transactions) ? data.transactions : []), total_count: 0 };
 
   return (
     <div className="space-y-6">
@@ -354,7 +354,7 @@ export default function WalletDashboard({ address, data, loading, error }: Walle
                 )}
 
                 {/* Behavioral Tags */}
-                {(risk_assessment.behavioral_tags?.length > 0 || data.behavioral_analysis?.tags?.length > 0) && (
+                {(risk_assessment.behavioral_tags?.length > 0 || (data.behavioral_analysis?.tags?.length || 0) > 0) && (
                   <div>
                     <h4 className="text-sm font-medium text-gray-500 mb-3">Behavioral Tags</h4>
                     <div className="flex flex-wrap gap-2">
@@ -407,7 +407,7 @@ export default function WalletDashboard({ address, data, loading, error }: Walle
               </div>
             </div>
 
-            <TransactionList transactions={transactions.recent || data.transactions || []} />
+            <TransactionList transactions={transactions.recent || (Array.isArray(data.transactions) ? data.transactions : []) || []} />
             
             {transactions.total_count > (transactions.recent?.length || 0) && (
               <div className="mt-6 text-center">
@@ -449,9 +449,9 @@ export default function WalletDashboard({ address, data, loading, error }: Walle
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Graph Depth
                   </label>
-                  <select className="w-full border border-gray-300 rounded px-3 py-1 text-sm text-black">
+                  <select className="w-full border border-gray-300 rounded px-3 py-1 text-sm text-black" defaultValue="2">
                     <option value="1">1 hop</option>
-                    <option value="2" defaultSelected>2 hops</option>
+                    <option value="2">2 hops</option>
                     <option value="3">3 hops</option>
                   </select>
                 </div>
@@ -521,7 +521,7 @@ export default function WalletDashboard({ address, data, loading, error }: Walle
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600">Positive Mentions:</span>
                   <span className="font-medium text-green-600">
-                    {data.social_intelligence.positive_mentions}
+                    {data.social_intelligence.positive_mentions || 0}
                   </span>
                 </div>
               </div>
@@ -531,7 +531,7 @@ export default function WalletDashboard({ address, data, loading, error }: Walle
             <div className="bg-gray-50 rounded-lg p-6">
               <h4 className="font-medium text-gray-900 mb-4">Sentiment Analysis</h4>
               <div className="space-y-2">
-                {Object.entries(data.social_intelligence.sentiment_summary).map(([sentiment, count]) => (
+                {Object.entries(data.social_intelligence.sentiment_summary || {}).map(([sentiment, count]) => (
                   <div key={sentiment} className="flex justify-between items-center">
                     <span className="text-sm text-gray-600 capitalize">{sentiment}:</span>
                     <div className="flex items-center gap-2">
@@ -542,7 +542,7 @@ export default function WalletDashboard({ address, data, loading, error }: Walle
                             sentiment === 'negative' ? 'bg-red-500' : 'bg-gray-400'
                           }`}
                           style={{
-                            width: `${(count / data.social_intelligence.total_mentions * 100) || 0}%`
+                            width: `${(count / (data.social_intelligence?.total_mentions || 1) * 100) || 0}%`
                           }}
                         />
                       </div>
@@ -555,11 +555,11 @@ export default function WalletDashboard({ address, data, loading, error }: Walle
           </div>
 
           {/* Risk Indicators */}
-          {data.social_intelligence.risk_indicators?.length > 0 && (
+          {(data.social_intelligence?.risk_indicators?.length || 0) > 0 && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-6 mt-6">
               <h4 className="font-medium text-red-900 mb-3">⚠️ Risk Indicators</h4>
               <ul className="space-y-2">
-                {data.social_intelligence.risk_indicators.map((indicator: string, index: number) => (
+                {(data.social_intelligence?.risk_indicators || []).map((indicator: string, index: number) => (
                   <li key={index} className="text-sm text-red-800 flex items-start gap-2">
                     <span className="text-red-500 mt-1">•</span>
                     <span>{indicator}</span>
@@ -625,7 +625,7 @@ export default function WalletDashboard({ address, data, loading, error }: Walle
           <div>
             Analyzed: {data.metadata?.analysis_timestamp ? 
               formatTimestamp(data.metadata.analysis_timestamp) : 
-              formatTimestamp(data.analysis_timestamp || Date.now())
+              formatTimestamp(data.analysis_timestamp || new Date().toISOString())
             }
           </div>
         </div>

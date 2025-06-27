@@ -18,6 +18,29 @@ export interface WalletAnalysisResponse {
   transactions: TransactionData;
   tokens: Token[];
   metadata: AnalysisMetadata;
+  // Enhanced analysis fields (Phase 2)
+  analysis_mode?: 'basic' | 'enhanced';
+  graph_insights?: {
+    path_analysis_available: boolean;
+    total_connections: number;
+    network_centrality?: number;
+  };
+  social_intelligence?: {
+    total_mentions: number;
+    scam_alerts: number;
+    positive_mentions?: number;
+    sentiment_summary?: Record<string, number>;
+    risk_indicators?: string[];
+  };
+  recommendations?: string[];
+  next_actions?: string[];
+  behavioral_analysis?: {
+    tags: string[];
+  };
+  data_sources?: string[];
+  // Legacy fields for backward compatibility
+  balance?: number;
+  transaction_count?: number;
 }
 
 export interface WalletInfo {
@@ -42,6 +65,8 @@ export interface RiskAssessment {
     balance_ether: number;
     assessment_timestamp: string;
   };
+  // Enhanced analysis fields
+  confidence?: 'low' | 'medium' | 'high';
 }
 
 export interface TransactionData {
@@ -86,6 +111,8 @@ export interface AnalysisMetadata {
   data_sources: string[];
   analysis_engine: string;
   chain: string;
+  analysis_version?: string;
+  analysis_timestamp?: string;
 }
 
 // Risk Level Enum
@@ -100,7 +127,7 @@ export interface WalletSearchProps {
 
 export interface WalletDashboardProps {
   address: string;
-  data: WalletAnalysisResponse;
+  data: WalletAnalysisResponse | null;
   loading?: boolean;
   error?: string | null;
 }

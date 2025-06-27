@@ -192,7 +192,7 @@ export async function copyToClipboard(text: string): Promise<boolean> {
 /**
  * Parse method signature
  */
-export function parseMethodSignature(methodId: string | null): string {
+export function parseMethodSignature(methodId: string | null | undefined): string {
   if (!methodId) return 'Unknown';
   
   const methodMap: Record<string, string> = {
