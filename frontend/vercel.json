@@ -1,11 +1,4 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "frontend/package.json",
-      "use": "@vercel/next"
-    }
-  ],
   "env": {
     "NEXT_PUBLIC_BACKEND_URL": "https://sentinel-mockup.onrender.com",
     "BACKEND_URL": "https://sentinel-mockup.onrender.com"
