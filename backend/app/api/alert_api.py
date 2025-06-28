@@ -16,13 +16,26 @@ logger = logging.getLogger(__name__)
 alert_api = Blueprint('alert_api', __name__)
 
 # Initialize AlertSystem (in production, use dependency injection)
-graph_client = PostgreSQLGraphClient()
-alert_system = AlertSystem(graph_client)
+# Will be initialized properly in app factory
+graph_client: PostgreSQLGraphClient = None
+alert_system: AlertSystem = None
+
+def init_alert_services(graph_db: PostgreSQLGraphClient, alerts: AlertSystem):
+    """Initialize alert system services"""
+    global graph_client, alert_system
+    graph_client = graph_db
+    alert_system = alerts
 
 @alert_api.route('/api/alerts/rules', methods=['GET'])
 def get_alert_rules():
     """Get all alert rules for a user"""
     try:
+        if not alert_system:
+            return jsonify({
+                'success': False,
+                'error': 'Alert system not available'
+            }), 503
+            
         user_id = request.args.get('user_id', 'default_user')
         
         # Filter rules by user_id (simplified for demo)
@@ -63,6 +76,12 @@ def get_alert_rules():
 def create_alert_rule():
     """Create a new alert rule"""
     try:
+        if not alert_system:
+            return jsonify({
+                'success': False,
+                'error': 'Alert system not available'
+            }), 503
+            
         data = request.get_json()
         
         # Validate required fields
@@ -255,6 +274,12 @@ def get_alert_events():
 def monitor_address():
     """Monitor an address against alert rules"""
     try:
+        if not alert_system:
+            return jsonify({
+                'success': False,
+                'error': 'Alert system not available'
+            }), 503
+            
         data = request.get_json()
         
         if 'address' not in data:

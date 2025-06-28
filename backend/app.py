@@ -64,6 +64,10 @@ def create_app():
     # Load environment variables
     load_dotenv()
     
+    # Configure app
+    app.config['ETHERSCAN_API_KEY'] = os.environ.get('ETHERSCAN_API_KEY', 'YourApiKeyToken')
+    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
+    
     # Configure logging
     if not app.debug:
         logging.basicConfig(level=logging.INFO)
@@ -153,16 +157,29 @@ def create_app():
     # First register graph API (always register, with fallback handling)
     init_graph_services(graph_client, graph_service, social_service)
     app.register_blueprint(graph_bp, url_prefix='/api/graph')
-    app.logger.info("✅ Graph API endpoints registered at /api/graph/*")
     
-    # Register other APIs
-    app.register_blueprint(wallet_bp)
-    app.register_blueprint(alert_api)
-    app.register_blueprint(social_api)
-    app.register_blueprint(phase3_bp)  # Phase 3 API
-    app.register_blueprint(public_api_bp)  # Public API
+    # Register other APIs with proper URL prefixes
+    app.register_blueprint(wallet_bp)  # Wallet routes include their own prefixes
+    app.register_blueprint(alert_api)  # Alert routes already have /api prefix
+    app.register_blueprint(social_api)  # Social routes already have /api prefix  
+    app.register_blueprint(phase3_bp)  # Phase 3 API (already has /api/v3 prefix)
+    app.register_blueprint(public_api_bp)  # Public API (already has /api/v1 prefix)
+    
+    # Initialize alert services properly
+    try:
+        from app.api.alert_api import init_alert_services
+        if graph_client and alert_system:
+            init_alert_services(graph_client, alert_system)
+            app.logger.info("✅ Alert services initialized")
+    except Exception as e:
+        app.logger.warning(f"⚠️ Alert services initialization failed: {str(e)}")
+    # Log registered endpoints for debugging
+    app.logger.info("✅ All API endpoints registered:")
+    for rule in app.url_map.iter_rules():
+        app.logger.info(f"  {', '.join(rule.methods)} {rule.rule}")
+    
     app.logger.info("✅ Wallet API endpoints registered")
-    app.logger.info("✅ Alert API endpoints registered")
+    app.logger.info("✅ Alert API endpoints registered") 
     app.logger.info("✅ Social Intelligence API endpoints registered")
     app.logger.info("✅ Phase 3 Advanced Intelligence API endpoints registered")
     app.logger.info("✅ Public API endpoints registered")
@@ -220,10 +237,16 @@ def create_app():
     def api_info():
         """API information and available endpoints"""
         
+        # Base endpoints always available
         endpoints = {
             "phase_1": {
                 "wallet_analysis": "/api/v1/wallet/{address}",
-                "description": "Basic wallet analysis with real-time data"
+                "wallet_test": "/api/v1/wallet/test",
+                "wallet_rpc": "/wallet/{address}/rpc?chain={chain}",
+                "wallet_hybrid": "/wallet/{address}/hybrid?source={api|rpc|hybrid}",
+                "rpc_chains": "/wallet/rpc/chains",
+                "data_sources_status": "/wallet/data-sources/status",
+                "description": "Comprehensive wallet analysis with API, RPC, and Hybrid support"
             },
             "alert_system": {
                 "get_rules": "/api/alerts/rules",
@@ -236,9 +259,23 @@ def create_app():
                 "get_stats": "/api/alerts/stats",
                 "test_rule": "/api/alerts/test [POST]",
                 "description": "Real-time alert system with custom rules and notifications"
+            },
+            "social_intelligence": {
+                "analyze_address": "/api/social/{address}",
+                "platform_stats": "/api/social/platform-stats",
+                "description": "Social media intelligence and reputation analysis"
+            },
+            "public_api": {
+                "health_check": "/api/v1/health",
+                "wallet_analysis": "/api/v1/wallet/{address}/analysis",
+                "wallet_risk": "/api/v1/wallet/{address}/risk",
+                "api_usage": "/api/v1/usage",
+                "documentation": "/api/v1/docs",
+                "description": "Public API with authentication required"
             }
         }
         
+        # Add Phase 2 endpoints if graph client is available
         if graph_client:
             endpoints["phase_2"] = {
                 "enhanced_analysis": "/api/v1/wallet/{address}",
@@ -250,14 +287,25 @@ def create_app():
                 "description": "Enhanced analysis with graph database and social intelligence"
             }
         
+        # Add Phase 3 endpoints if advanced services are available
+        if network_analyzer and alert_system:
+            endpoints["phase_3"] = {
+                "gnn_analysis": "/api/v3/gnn/{address}",
+                "intelligence_analysis": "/api/v3/intelligence/{address}",
+                "multichain_analysis": "/api/v3/multichain/{address}",
+                "description": "Advanced AI-powered analysis with GNN and multichain support"
+            }
+        
         return jsonify({
             "name": "Sentinel Threat Intelligence API",
             "version": "2.0",
             "description": "Next-generation blockchain threat intelligence platform",
             "phase": "enhanced" if graph_client else "standard",
+            "mode": "Phase 3 Advanced" if (network_analyzer and alert_system) else ("Phase 2 Enhanced" if graph_client else "Phase 1 Basic"),
             "endpoints": endpoints,
             "documentation": "/docs",
-            "health": "/health"
+            "health": "/health",
+            "total_endpoints": sum(len(v) - 1 if 'description' in v else len(v) for v in endpoints.values()) + 2  # +2 for health and docs
         })
     
     # Error handlers
@@ -298,8 +346,8 @@ if __name__ == '__main__':
     
     print(f"🌐 Running on http://localhost:{port}")
     print(f"🔧 Debug mode: {debug_mode}")
-    print("📊 Health check: http://localhost:5000/health")
-    print("📋 API info: http://localhost:5000/api/info")
+    print(f"📊 Health check: http://localhost:{port}/health")
+    print(f"📋 API info: http://localhost:{port}/api/info")
     
     app.run(
         host='0.0.0.0',

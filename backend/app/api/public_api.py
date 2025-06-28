@@ -153,9 +153,14 @@ def require_api_key(f):
                 'message': 'The provided API key is invalid or inactive'
             }), 401
         
-        # Check rate limits
-        api_key_hash = generate_password_hash(api_key)
-        if not api_key_manager.check_rate_limits(api_key_hash, key_metadata):
+        # Check rate limits - find the correct hash key
+        api_key_hash = None
+        for stored_hash, metadata in api_key_manager.api_keys.items():
+            if check_password_hash(stored_hash, api_key):
+                api_key_hash = stored_hash
+                break
+        
+        if api_key_hash and not api_key_manager.check_rate_limits(api_key_hash, key_metadata):
             return jsonify({
                 'error': 'Rate limit exceeded',
                 'message': 'API key has exceeded rate limits for today'

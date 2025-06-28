@@ -11,10 +11,34 @@ from datetime import datetime, timedelta
 import numpy as np
 
 from ..database.postgres_graph import PostgreSQLGraphClient
-from ..services.gnn_model import gnn_engine, GNNIntelligenceEngine
-from ..services.network_behavior_analyzer import NetworkBehaviorAnalyzer
-from ..services.alert_system import AlertSystem, AlertRule, AlertSeverity
-from ..services.multichain_service import multichain_service, ChainType
+try:
+    from ..services.gnn_model import gnn_engine
+    GNN_AVAILABLE = True
+except ImportError:
+    gnn_engine = None
+    GNN_AVAILABLE = False
+
+try:
+    from ..services.network_behavior_analyzer import NetworkBehaviorAnalyzer
+    NETWORK_ANALYZER_AVAILABLE = True
+except ImportError:
+    NetworkBehaviorAnalyzer = None
+    NETWORK_ANALYZER_AVAILABLE = False
+
+try:
+    from ..services.alert_system import AlertSystem, AlertSeverity
+    ALERT_SYSTEM_AVAILABLE = True
+except ImportError:
+    AlertSystem = None
+    AlertSeverity = None
+    ALERT_SYSTEM_AVAILABLE = False
+
+try:
+    from ..services.multichain_service import multichain_service
+    MULTICHAIN_AVAILABLE = True
+except ImportError:
+    multichain_service = None
+    MULTICHAIN_AVAILABLE = False
 from ..services.etherscan_service import EtherscanService
 from ..services.risk_scorer import RiskScorer
 from ..utils.helpers import validate_ethereum_address, handle_errors
@@ -77,7 +101,7 @@ def get_comprehensive_intelligence(address: str):
         
         # === 1. GNN-Based Risk Assessment ===
         gnn_analysis = None
-        if use_gnn and gnn_engine:
+        if use_gnn and GNN_AVAILABLE and gnn_engine:
             try:
                 gnn_analysis = gnn_engine.analyze_address_with_gnn(address)
                 analysis_result["services_used"].append("gnn_engine")
@@ -94,7 +118,7 @@ def get_comprehensive_intelligence(address: str):
         
         # === 2. Multi-chain Analysis ===
         multichain_analysis = None
-        if include_multichain:
+        if include_multichain and MULTICHAIN_AVAILABLE and multichain_service:
             try:
                 # Detect possible chains for this address
                 possible_chains = multichain_service.detect_address_chain(address)
@@ -124,7 +148,7 @@ def get_comprehensive_intelligence(address: str):
         
         # === 3. Network Behavior Analysis ===
         network_analysis = None
-        if include_network and network_analyzer:
+        if include_network and NETWORK_ANALYZER_AVAILABLE and network_analyzer:
             try:
                 # Get network data from Neo4j
                 network_data = graph_client.get_address_subgraph(address, depth=3)
@@ -198,44 +222,31 @@ def create_alert_rule():
     """Create a new alert rule using the Sentinel Alert System"""
     
     try:
+        if not ALERT_SYSTEM_AVAILABLE or not alert_system:
+            return jsonify({
+                "status": "error",
+                "error": "Alert system not available"
+            }), 503
+            
         data = request.get_json()
         
         if not data:
             return jsonify({"error": "Request body required"}), 400
         
         # Validate required fields
-        required_fields = ['name', 'alert_type', 'conditions']
+        required_fields = ['name', 'rule_type', 'conditions']  # Fixed field name
         for field in required_fields:
             if field not in data:
                 return jsonify({"error": f"Missing required field: {field}"}), 400
         
-        # Create alert rule
-        alert_rule = AlertRule(
-            name=data['name'],
-            severity=AlertSeverity(data.get('severity', 'medium')),
-            conditions=data['conditions'],
-            notification_channels=data.get('notification_channels', ['email']),
-            cooldown_minutes=data.get('cooldown_minutes', 60),
-            enabled=data.get('enabled', True),
-            created_by=data.get('user_id', 'anonymous')
-        )
-        
-        # Add to alert system
-        rule_id = alert_system.add_alert_rule(alert_rule)
+        # Use the alert_system.create_alert_rule method
+        rule_id = alert_system.create_alert_rule(data)
         
         return jsonify({
             "status": "success",
             "data": {
                 "rule_id": rule_id,
-                "alert_rule": {
-                    "id": rule_id,
-                    "name": alert_rule.name,
-                    "alert_type": alert_rule.alert_type.value,
-                    "conditions": alert_rule.conditions,
-                    "notification_channels": alert_rule.notification_channels,
-                    "enabled": alert_rule.enabled,
-                    "created_at": alert_rule.created_at.isoformat()
-                }
+                "message": "Alert rule created successfully"
             }
         })
         
@@ -253,6 +264,12 @@ def detect_address_chains(address: str):
     """Detect which blockchain networks an address could belong to"""
     
     try:
+        if not MULTICHAIN_AVAILABLE or not multichain_service:
+            return jsonify({
+                "status": "error",
+                "error": "Multichain service not available"
+            }), 503
+            
         # Detect possible chains
         possible_chains = multichain_service.detect_address_chain(address)
         
@@ -286,6 +303,12 @@ def classify_address_with_gnn(address: str):
         return jsonify({"error": "Invalid Ethereum address"}), 400
     
     try:
+        if not GNN_AVAILABLE or not gnn_engine:
+            return jsonify({
+                "status": "error",
+                "error": "GNN engine not available"
+            }), 503
+            
         # Get graph data and transaction data for GNN analysis
         graph_data = {}
         transaction_data = []

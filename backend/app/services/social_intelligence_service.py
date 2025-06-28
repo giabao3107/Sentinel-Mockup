@@ -401,4 +401,18 @@ class SocialIntelligenceService:
                 'sentiment_analysis': True,
                 'risk_classification': True
             }
-        } 
+        }
+    
+    def get_mock_intelligence(self, address: str) -> SocialIntelligence:
+        """Get mock social intelligence data when async analysis fails"""
+        
+        return SocialIntelligence(
+            address=address,
+            total_mentions=0,
+            recent_mentions=[],
+            sentiment_summary={'positive': 0, 'negative': 0, 'neutral': 0},
+            risk_indicators=[],
+            scam_alerts=0,
+            positive_mentions=0,
+            warning_flags=[]
+        ) 

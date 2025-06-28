@@ -9,6 +9,8 @@ from typing import Dict, List, Optional
 from flask import jsonify, current_app, request
 from app.api import wallet_bp
 from app.services.etherscan_service import EtherscanService
+from app.services.rpc_service import RPCService
+from app.services.hybrid_service import HybridService
 from app.services.risk_scorer import RiskScorer
 from app.utils.helpers import is_valid_ethereum_address, format_wei_to_ether
 from ..database.postgres_graph import PostgreSQLGraphClient
@@ -110,6 +112,252 @@ def analyze_wallet(address):
             'message': str(e)
         }), 500
 
+@wallet_bp.route('/wallet/<address>/rpc', methods=['GET'])
+def analyze_wallet_rpc(address):
+    """
+    Analyze wallet using RPC endpoints instead of API keys
+    
+    Args:
+        address (str): Ethereum wallet address to analyze
+        
+    Returns:
+        JSON response with wallet analysis using RPC data
+    """
+    
+    # Validate Ethereum address format
+    if not is_valid_ethereum_address(address):
+        return jsonify({
+            'error': 'Invalid Ethereum address format',
+            'address': address
+        }), 400
+    
+    try:
+        # Initialize RPC service
+        rpc_service = RPCService()
+        
+        # Get chain from query parameter (default: ethereum)
+        chain = request.args.get('chain', 'ethereum')
+        
+        # Fetch wallet data via RPC
+        balance_data = rpc_service.get_balance(address, chain)
+        tx_count_data = rpc_service.get_transaction_count(address, chain)
+        contract_check = rpc_service.get_code(address, chain)
+        chain_info = rpc_service.get_chain_info(chain)
+        
+        # Basic risk assessment based on available RPC data
+        risk_score = 10  # Base score
+        risk_factors = []
+        
+        # Risk factors based on RPC data
+        if contract_check.get('is_contract', False):
+            risk_score += 20
+            risk_factors.append("Smart contract address")
+        
+        if tx_count_data.get('transaction_count', 0) > 1000:
+            risk_score += 15
+            risk_factors.append("High transaction count")
+        
+        if balance_data.get('balance_ether', 0) > 100:
+            risk_score += 10
+            risk_factors.append("High balance")
+        
+        # Determine risk level
+        if risk_score >= 60:
+            risk_level = "high"
+        elif risk_score >= 30:
+            risk_level = "medium"
+        else:
+            risk_level = "low"
+        
+        # Prepare response
+        response_data = {
+            'address': address,
+            'chain': chain,
+            'analysis_timestamp': datetime.now().isoformat(),
+            'data_source': 'RPC',
+            'rpc_url': balance_data.get('rpc_url'),
+            
+            'wallet_info': {
+                'balance': {
+                    'wei': balance_data.get('balance', 0),
+                    'ether': balance_data.get('balance_ether', 0),
+                    'native_token': chain_info.get('chain', 'ETH').upper()
+                },
+                'transaction_count': tx_count_data.get('transaction_count', 0),
+                'is_contract': contract_check.get('is_contract', False),
+                'code_size': contract_check.get('code_size', 0)
+            },
+            
+            'risk_assessment': {
+                'risk_score': min(risk_score, 100),
+                'risk_level': risk_level,
+                'risk_factors': risk_factors,
+                'confidence': 'medium'  # RPC data has medium confidence
+            },
+            
+            'chain_info': {
+                'name': chain,
+                'chain_id': chain_info.get('chain_id'),
+                'latest_block': chain_info.get('latest_block'),
+                'gas_price_gwei': chain_info.get('gas_price_gwei')
+            },
+            
+            'metadata': {
+                'analysis_engine': 'RPC v1.0',
+                'data_sources': ['RPC Node'],
+                'limitations': [
+                    'No transaction history available via RPC',
+                    'Limited risk assessment without historical data',
+                    'Basic analysis only'
+                ],
+                'advantages': [
+                    'No API key required',
+                    'Direct blockchain access',
+                    'Real-time data',
+                    'Multi-chain support'
+                ]
+            }
+        }
+        
+        return jsonify(response_data), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Error analyzing wallet {address} via RPC: {str(e)}")
+        return jsonify({
+            'error': 'Internal server error during RPC wallet analysis',
+            'address': address,
+            'chain': chain,
+            'message': str(e)
+        }), 500
+
+@wallet_bp.route('/wallet/<address>/hybrid', methods=['GET'])
+def analyze_wallet_hybrid(address):
+    """
+    Hybrid analysis combining both API and RPC data sources
+    Best of both worlds: API detailed data + RPC real-time data
+    
+    Args:
+        address (str): Ethereum wallet address to analyze
+        
+    Returns:
+        JSON response with comprehensive hybrid analysis
+    """
+    
+    # Validate Ethereum address format
+    if not is_valid_ethereum_address(address):
+        return jsonify({
+            'error': 'Invalid Ethereum address format',
+            'address': address
+        }), 400
+    
+    try:
+        # Initialize hybrid service
+        api_key = current_app.config.get('ETHERSCAN_API_KEY')
+        hybrid_service = HybridService(api_key)
+        
+        # Get parameters
+        chain = request.args.get('chain', 'ethereum')
+        prefer_source = request.args.get('source', 'hybrid')  # 'api', 'rpc', 'hybrid'
+        
+        # Perform hybrid analysis
+        analysis_result = hybrid_service.analyze_wallet_comprehensive(
+            address=address,
+            chain=chain,
+            prefer_source=prefer_source
+        )
+        
+        # Add metadata
+        analysis_result['metadata'] = {
+            'analysis_engine': 'Hybrid v1.0',
+            'prefer_source': prefer_source,
+            'chain': chain,
+            'features': {
+                'real_time_balance': True,
+                'transaction_history': 'api_dependent',
+                'multi_chain_support': True,
+                'fallback_mechanism': True
+            },
+            'usage_tips': {
+                'for_real_time': 'Use ?source=rpc for fastest real-time data',
+                'for_detailed': 'Use ?source=api for comprehensive transaction history',
+                'for_best': 'Use ?source=hybrid (default) for intelligent combination'
+            }
+        }
+        
+        return jsonify(analysis_result), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Error in hybrid analysis for {address}: {str(e)}")
+        return jsonify({
+            'error': 'Internal server error during hybrid analysis',
+            'address': address,
+            'chain': chain,
+            'message': str(e)
+        }), 500
+
+@wallet_bp.route('/wallet/data-sources/status', methods=['GET'])
+def get_data_sources_status():
+    """
+    Check status of all available data sources
+    
+    Returns:
+        JSON response with data source availability
+    """
+    
+    try:
+        api_key = current_app.config.get('ETHERSCAN_API_KEY')
+        hybrid_service = HybridService(api_key)
+        
+        status = hybrid_service.get_data_source_status()
+        
+        # Add usage recommendations
+        status['recommendations'] = {
+            'rpc_only': 'Use /wallet/{address}/rpc for API-key-free analysis',
+            'api_only': 'Use /api/v1/wallet/{address} for detailed Ethereum analysis',
+            'hybrid': 'Use /wallet/{address}/hybrid for best of both worlds',
+            'multi_chain': 'Use RPC endpoints for non-Ethereum chains'
+        }
+        
+        return jsonify(status), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Error checking data sources status: {str(e)}")
+        return jsonify({
+            'error': 'Internal server error checking data sources',
+            'message': str(e)
+        }), 500
+
+@wallet_bp.route('/wallet/rpc/chains', methods=['GET'])
+def get_rpc_chains():
+    """
+    Get list of available RPC chains
+    
+    Returns:
+        JSON response with available blockchain networks
+    """
+    
+    try:
+        rpc_service = RPCService()
+        chains_data = rpc_service.get_available_chains()
+        
+        return jsonify({
+            'available_chains': chains_data['chains'],
+            'total_chains': chains_data['total_chains'],
+            'usage': {
+                'endpoint_format': '/wallet/{address}/rpc?chain={chain_name}',
+                'supported_chains': [chain['name'] for chain in chains_data['chains']],
+                'example': '/wallet/0x742d35Cc6634C0532925a3b8D09f5f56F8c4C0e5/rpc?chain=polygon'
+            },
+            'timestamp': chains_data['timestamp']
+        }), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Error fetching RPC chains: {str(e)}")
+        return jsonify({
+            'error': 'Internal server error fetching RPC chains',
+            'message': str(e)
+        }), 500
+
 @wallet_bp.route('/wallet/<address>/risk-only', methods=['GET'])
 def get_wallet_risk_only(address):
     """
@@ -162,176 +410,188 @@ def get_wallet_risk_only(address):
             'message': str(e)
         }), 500
 
+@wallet_bp.route('/api/v1/wallet/<address>/simple', methods=['GET'])
+def get_wallet_analysis_simple(address):
+    """Simple wallet analysis for debugging"""
+    try:
+        # Validate address
+        if not is_valid_ethereum_address(address):
+            return jsonify({"error": "Invalid Ethereum address format"}), 400
+        
+        # Return mock data immediately without external API calls
+        mock_result = {
+            "address": address,
+            "analysis_mode": "mock",
+            "data_sources": ["mock"],
+            "balance": 1234567890123456789,  # ~1.23 ETH
+            "balance_ether": 1.234567890123456789,
+            "transaction_count": 42,
+            "transactions": [
+                {
+                    "hash": "0xabcd1234567890abcdef1234567890abcdef1234567890abcdef1234567890ab",
+                    "from": "0x742d35cc6634c0532925a3b8d09f5f56f8c4c0e5",
+                    "to": address,
+                    "value_ether": 0.5,
+                    "timestamp": "2024-01-15T10:30:00Z",
+                    "block_number": 19000001
+                }
+            ],
+            "tokens": [],
+            "risk_assessment": {
+                "risk_score": 25.5,
+                "risk_level": "low",
+                "confidence": "high"
+            },
+            "behavioral_analysis": {
+                "tags": ["Normal Activity", "Low Risk"],
+                "patterns": ["regular_usage"]
+            },
+            "metadata": {
+                "analysis_timestamp": datetime.now().isoformat(),
+                "analysis_version": "1.0-mock",
+                "note": "This is mock data for debugging"
+            }
+        }
+        
+        return jsonify(mock_result), 200
+        
+    except Exception as e:
+        return jsonify({
+            "error": "Simple analysis failed", 
+            "message": str(e),
+            "address": address
+        }), 500
+
 @wallet_bp.route('/api/v1/wallet/<address>', methods=['GET'])
 def get_wallet_analysis(address):
     """
-    Phase 2 Enhanced: Intelligent routing between real-time API and graph database
+    Enhanced wallet analysis with proper risk scoring
     """
     try:
         # Validate Ethereum address format
         if not is_valid_ethereum_address(address):
             return jsonify({"error": "Invalid Ethereum address format"}), 400
         
-        # Check if we have enhanced graph data for this address
-        has_graph_data = False
-        graph_analytics = None
+        # Initialize services
+        etherscan_service = EtherscanService(current_app.config['ETHERSCAN_API_KEY'])
+        risk_scorer = RiskScorer()
         
-        if graph_client:
-            try:
-                graph_analytics = graph_client.get_address_analytics(address)
-                has_graph_data = graph_analytics is not None
-            except Exception as e:
-                logger.warning(f"Could not fetch graph data for {address}: {str(e)}")
-        
-        # Route to appropriate data source
-        if has_graph_data and request.args.get('source') != 'realtime':
-            # Use enhanced graph database analysis
-            return _get_enhanced_wallet_analysis(address, graph_analytics)
-        else:
-            # Use real-time API analysis (Phase 1 behavior)
-            return _get_realtime_wallet_analysis(address)
+        # Get wallet information from Etherscan (will use mock data if API fails)
+        try:
+            wallet_info = etherscan_service.get_wallet_info(address)
             
+            if not wallet_info:
+                # Return minimal error response
+                return jsonify({
+                    "error": "Could not retrieve wallet information",
+                    "address": address,
+                    "suggestion": "Try again later or use /simple endpoint for basic analysis"
+                }), 500
+        except Exception as service_error:
+            # If even the service fails, return a basic error
+            return jsonify({
+                "error": "Service initialization failed",
+                "address": address,
+                "message": str(service_error),
+                "suggestion": "Check API configuration"
+            }), 500
+        
+        # Calculate risk score using RiskScorer
+        risk_analysis = risk_scorer.calculate_risk_score(
+            address=address,
+            transactions=wallet_info.get('transactions', []),
+            balance=wallet_info.get('balance', 0)
+        )
+        
+        # Create comprehensive response
+        analysis_result = {
+            "address": address,
+            "analysis_mode": "enhanced",
+            "data_sources": ["etherscan_or_mock"],
+            
+            # Wallet information
+            "balance": wallet_info.get('balance', 0),
+            "balance_ether": wallet_info.get('balance_ether', 0.0),
+            "transaction_count": wallet_info.get('transaction_count', 0),
+            "transactions": wallet_info.get('transactions', [])[:10],  # Last 10 transactions
+            "tokens": wallet_info.get('tokens', []),
+            "token_count": wallet_info.get('token_count', 0),
+            "first_transaction": wallet_info.get('first_transaction'),
+            "last_transaction": wallet_info.get('last_transaction'),
+            "volume_stats": wallet_info.get('volume_stats', {}),
+            
+            # Risk assessment from RiskScorer
+            "risk_assessment": {
+                "risk_score": risk_analysis.get('risk_score', 0),
+                "risk_level": risk_analysis.get('risk_level', 'MINIMAL'),
+                "risk_factors": risk_analysis.get('risk_factors', []),
+                "confidence": "high"
+            },
+            
+            # Behavioral analysis
+            "behavioral_analysis": {
+                "tags": risk_analysis.get('behavioral_tags', []),
+                "patterns": ["heuristic_analysis"],
+                "analysis_details": risk_analysis.get('analysis_details', {})
+            },
+            
+            # Recommendations based on risk level
+            "recommendations": _generate_recommendations(risk_analysis),
+            
+            # Metadata
+            "metadata": {
+                "analysis_timestamp": datetime.now().isoformat(),
+                "analysis_version": "2.0-enhanced",
+                "analysis_engine": "Heuristic Risk Scorer",
+                "data_quality": "high" if not wallet_info.get('error') else "mock"
+            }
+        }
+        
+        return jsonify(analysis_result), 200
+        
     except Exception as e:
         logger.error(f"Error analyzing wallet {address}: {str(e)}")
-        return jsonify({"error": "Internal server error"}), 500
+        return jsonify({
+            "error": "Internal server error during wallet analysis", 
+            "message": str(e),
+            "address": address
+        }), 500
 
-def _get_enhanced_wallet_analysis(address: str, graph_analytics: Dict) -> Dict:
-    """Enhanced analysis using graph database and social intelligence"""
+def _generate_recommendations(risk_analysis: Dict) -> List[str]:
+    """Generate recommendations based on risk analysis"""
+    recommendations = []
+    risk_level = risk_analysis.get('risk_level', 'MINIMAL')
+    risk_factors = risk_analysis.get('risk_factors', [])
     
-    # Initialize services
-    etherscan_service = EtherscanService(current_app.config['ETHERSCAN_API_KEY'])
-    risk_scorer = RiskScorer()
+    if risk_level == 'CRITICAL':
+        recommendations.append("🚨 HIGH RISK: Exercise extreme caution with this address")
+        recommendations.append("Avoid any transactions with this wallet")
+        recommendations.append("Report to relevant authorities if involved in suspicious activity")
+    elif risk_level == 'HIGH':
+        recommendations.append("⚠️ HIGH RISK: Proceed with extreme caution")
+        recommendations.append("Verify all transaction details carefully")
+        recommendations.append("Consider additional verification before interacting")
+    elif risk_level == 'MEDIUM':
+        recommendations.append("⚠️ MEDIUM RISK: Additional verification recommended")
+        recommendations.append("Monitor transaction patterns before proceeding")
+    elif risk_level == 'LOW':
+        recommendations.append("✅ LOW RISK: Generally safe but continue monitoring")
+        recommendations.append("Standard security practices apply")
+    else:
+        recommendations.append("✅ MINIMAL RISK: Address appears safe to interact with")
+        recommendations.append("Continue normal security practices")
     
-    # Get real-time balance and basic info
-    etherscan_data = etherscan_service.get_wallet_info(address)
+    # Add specific recommendations based on risk factors
+    if any('mixer' in factor.lower() for factor in risk_factors):
+        recommendations.append("🔍 Address has interacted with mixers - enhanced due diligence required")
     
-    # Get social intelligence (async call made sync for now)
-    social_intel = None
-    if social_service:
-        try:
-            # For demo, create a simplified social intelligence result
-            social_intel = {
-                "total_mentions": 0,
-                "scam_alerts": 0,
-                "sentiment_summary": {"positive": 0, "negative": 0, "neutral": 0},
-                "risk_indicators": []
-            }
-        except Exception as e:
-            logger.warning(f"Could not fetch social intelligence: {str(e)}")
+    if any('bot' in factor.lower() for factor in risk_factors):
+        recommendations.append("🤖 Potential automated activity detected - verify legitimacy")
     
-    # Enhanced risk scoring
-    enhanced_risk_score = _calculate_enhanced_risk_score(
-        etherscan_data, 
-        graph_analytics, 
-        social_intel
-    )
+    if any('dust' in factor.lower() for factor in risk_factors):
+        recommendations.append("💨 Dust activity detected - may be part of spam/airdrop campaigns")
     
-    # Enhanced behavioral tags
-    enhanced_tags = _generate_enhanced_tags(graph_analytics, social_intel)
-    
-    # Combine all data sources
-    analysis_result = {
-        "address": address,
-        "analysis_mode": "enhanced",
-        "data_sources": ["etherscan", "neo4j", "social_media"],
-        
-        # Real-time data
-        "balance": etherscan_data.get("balance", 0),
-        "transactions": etherscan_data.get("transactions", []),
-        "tokens": etherscan_data.get("tokens", []),
-        
-        # Enhanced analytics
-        "risk_assessment": {
-            "risk_score": enhanced_risk_score,
-            "risk_level": _get_risk_level(enhanced_risk_score),
-            "risk_factors": _identify_risk_factors(graph_analytics, social_intel),
-            "confidence": _calculate_confidence(graph_analytics)
-        },
-        
-        "behavioral_analysis": {
-            "tags": enhanced_tags,
-            "transaction_patterns": _analyze_transaction_patterns(graph_analytics),
-            "network_analysis": _summarize_network_analysis(graph_analytics),
-            "temporal_patterns": _analyze_temporal_patterns(graph_analytics)
-        },
-        
-        # Graph insights
-        "graph_insights": {
-            "total_connections": graph_analytics.get('outgoing_count', 0) + graph_analytics.get('incoming_count', 0),
-            "network_centrality": graph_analytics.get('network_centrality'),
-            "cluster_info": graph_analytics.get('cluster_id'),
-            "path_analysis_available": True
-        },
-        
-        # Social intelligence
-        "social_intelligence": social_intel,
-        
-        "recommendations": _generate_enhanced_recommendations(graph_analytics, social_intel),
-        "next_actions": _suggest_next_actions(address, graph_analytics),
-        
-        "metadata": {
-            "analysis_timestamp": datetime.now().isoformat(),
-            "data_freshness": _assess_data_freshness(graph_analytics),
-            "analysis_version": "2.0"
-        }
-    }
-    
-    return jsonify(analysis_result)
-
-def _get_realtime_wallet_analysis(address: str) -> Dict:
-    """Original Phase 1 real-time analysis"""
-    
-    # Initialize services
-    etherscan_service = EtherscanService(current_app.config['ETHERSCAN_API_KEY'])
-    risk_scorer = RiskScorer()
-    
-    # Get wallet information from Etherscan
-    wallet_info = etherscan_service.get_wallet_info(address)
-    
-    if wallet_info is None:
-        return jsonify({"error": "Could not retrieve wallet information"}), 500
-    
-    # Calculate risk score using Phase 1 heuristics
-    risk_score = risk_scorer.calculate_risk_score(wallet_info)
-    risk_level = _get_risk_level(risk_score)
-    
-    # Generate behavioral tags
-    behavioral_tags = risk_scorer.generate_behavioral_tags(wallet_info, risk_score)
-    
-    analysis_result = {
-        "address": address,
-        "analysis_mode": "realtime",
-        "data_sources": ["etherscan"],
-        
-        "balance": wallet_info.get("balance", 0),
-        "transaction_count": len(wallet_info.get("transactions", [])),
-        "transactions": wallet_info.get("transactions", [])[:10],  # Last 10 transactions
-        "tokens": wallet_info.get("tokens", []),
-        
-        "risk_assessment": {
-            "risk_score": risk_score,
-            "risk_level": risk_level,
-            "confidence": "medium"  # Phase 1 has medium confidence
-        },
-        
-        "behavioral_analysis": {
-            "tags": behavioral_tags,
-            "patterns": ["realtime_analysis_limited"]
-        },
-        
-        "recommendations": [
-            "Upgrade to enhanced analysis for deeper insights",
-            "Import historical data for graph analysis"
-        ],
-        
-        "metadata": {
-            "analysis_timestamp": datetime.now().isoformat(),
-            "analysis_version": "1.0",
-            "upgrade_available": True
-        }
-    }
-    
-    return jsonify(analysis_result)
+    return recommendations
 
 # === Enhanced Analysis Helper Functions ===
 
@@ -351,8 +611,16 @@ def _get_risk_level(risk_score: float) -> str:
 def _calculate_enhanced_risk_score(etherscan_data: Dict, graph_analytics: Dict, social_intel: Dict) -> float:
     """Calculate enhanced risk score using multiple data sources"""
     
-    # Phase 1 base score
-    base_score = risk_scorer.calculate_risk_score(etherscan_data)
+    # Initialize risk scorer
+    risk_scorer = RiskScorer()
+    
+    # Phase 1 base score - fix to extract score from returned dictionary
+    base_risk_analysis = risk_scorer.calculate_risk_score(
+        address=etherscan_data.get('address', ''),
+        transactions=etherscan_data.get('transactions', []),
+        balance=etherscan_data.get('balance', 0)
+    )
+    base_score = base_risk_analysis.get('risk_score', 0)
     
     # Graph-based risk factors
     graph_score = 0

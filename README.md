@@ -246,7 +246,7 @@ docker-compose up -d postgres redis
 # Backend
 cd backend
 pip install -r requirements.txt
-python run.py
+set FLASK_ENV=development & set DEBUG=True & python app.py
 
 # Frontend
 cd frontend
@@ -410,26 +410,3 @@ Lý do chọn MIT License:
 - Continuous Integration với GitHub Actions
 - Automated testing và deployment
 
-**Backup và Mirror:**
-- GitLab: https://gitlab.com/sentinel-team/sentinel-ai
-- BitBucket: https://bitbucket.org/sentinel-team/sentinel
-- Local enterprise git servers cho enterprise clients
-
-**Version Management:**
-- Semantic versioning (MAJOR.MINOR.PATCH)
-- Automated changelog generation
-- Tag-based release management
-- Docker image versioning aligned với code versions
-
-**Development Workflow:**
-- Feature branches cho mỗi tính năng mới
-- Pull request reviews với minimum 2 approvals
-- Automated testing trước khi merge
-- Staging environment cho testing
-- Production deployment qua approved releases
-
-**Documentation:**
-- Code documentation trong repository
-- API documentation auto-generated
-- User guides trong GitHub Wiki
-- Video tutorials và demos trong releases
